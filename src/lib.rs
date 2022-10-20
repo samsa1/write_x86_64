@@ -185,7 +185,7 @@ pub fn immb(imm: i8) -> reg::Operand<reg::RegB> {
 #[macro_export]
 macro_rules! reg {
     ($reg:expr) => {
-        crate::backend::asm::reg::Operand::Reg($reg)
+        $crate::reg::Operand::Reg($reg)
     };
 }
 
@@ -201,16 +201,16 @@ macro_rules! reg {
 #[macro_export]
 macro_rules! addr {
     ($reg:expr) => {
-        crate::backend::asm::reg::Operand::Addr(0, $reg, None, 0)
+        $crate::reg::Operand::Addr(0, $reg, None, 0)
     };
     ($offset:expr, $reg:expr) => {
-        crate::backend::asm::reg::Operand::Addr($offset, $reg, None, 0)
+        $crate::reg::Operand::Addr($offset, $reg, None, 0)
     };
     ($offset:expr, $reg:expr, $reg2:expr) => {
-        crate::backend::asm::reg::Operand::Addr($offset, $reg, Some($reg2), 1)
+        $crate::reg::Operand::Addr($offset, $reg, Some($reg2), 1)
     };
     ($offset:expr, $reg:expr, $reg2:expr, $scale:expr) => {
-        crate::backend::asm::reg::Operand::Addr($offset, $reg, Some($reg2), scale)
+        $crate::reg::Operand::Addr($offset, $reg, Some($reg2), scale)
     };
 }
 
@@ -218,7 +218,7 @@ macro_rules! addr {
 #[macro_export]
 macro_rules! lab {
     ($label:expr) => {
-        crate::backend::asm::reg::Operand::LabRelAddr($label)
+        $crate::reg::Operand::LabRelAddr($label)
     };
 }
 
@@ -226,7 +226,7 @@ macro_rules! lab {
 #[macro_export]
 macro_rules! lab {
     ($label:expr) => {
-        crate::backend::asm::reg::Operand::LabAbsAddr($label)
+        $crate::reg::Operand::LabAbsAddr($label)
     };
 }
 
@@ -234,7 +234,7 @@ macro_rules! lab {
 #[macro_export]
 macro_rules! ilab {
     ($label:expr) => {
-        crate::backend::asm::reg::Operand::LabVal($label)
+        $crate::reg::Operand::LabVal($label)
     };
 }
 
