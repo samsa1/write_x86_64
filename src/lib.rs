@@ -5,32 +5,31 @@
 //! This crate wants to be an equivalent of the above code
 //!
 //! For writting files see
-//! 
+//!
 //! [`data::Data`], [`file::File`] and [Text] data structures
 //!
 //! Registers %rax -> %r15 are all accessible for 8, 16, 32 and 64 bits.
 //! Write name in capital letters to access them
-//! 
+//!
 //! Operands can be obtained with [`lab`], [`ilab`], [`addr`], [`reg!`] and [`immb`] to [`immq`].
-//! 
+//!
 //! All instruction are available for various sizes.
-//! 
+//!
 //! Transfert instruction : [`movq`]
-//! 
+//!
 //! Arithmetic : [`leaq`], [`incq`], [`decq`], [`negq`], [`addq`], [`subq`], [`imulq`], [`cqto`], [`idivq`], [`divq`]
-//! 
+//!
 //! Logic : [`notq`], [`andq`], [`orq`], [`xorq`]
-//! 
+//!
 //! Shifts : [`shlq`], [`shrq`], [`sarq`]
-//! 
+//!
 //! Jumps : [`call`], [`call_star`], [`leave`], [`ret`], [`jmp`], [`jmp_star`], [`jcc`]
-//! 
+//!
 //! Conditions : [`cmpb`], [`testq`], [`set`], [`cmovq`]
-//! 
+//!
 //! Stack : [`pushq`], [`popq`]
-//! 
+//!
 //! Various others : [`label`], [`comment`]
-
 
 // Author :
 // 2022 Samuel VIVIEN

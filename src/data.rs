@@ -123,6 +123,24 @@ impl Data {
         }
     }
 
+    #[cfg(target_os = "linux")]
+    /// Write data segment in file
+    /// Does not add the .data at the beginning!
+    pub fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
+        for (name, data) in &self.infos {
+            match name {
+                None => (),
+                Some(name) => {
+                    file.write_all(name.as_bytes())?;
+                    file.write_all(b":\n")?;
+                }
+            }
+            data.write_in(file)?;
+        }
+        Ok(())
+    }
+
+    #[cfg(target_os = "macos")]
     /// Write data segment in file
     /// Does not add the .data at the beginning!
     pub fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
