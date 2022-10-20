@@ -15,6 +15,8 @@ use write_x86_64::*;
 
 fn main() {
 
+    let globl = label(new_label("main"))
+
     let text_ss = 
         label(new_label("main"))
         + pushq(reg!(RBP))
@@ -33,6 +35,7 @@ fn main() {
             " World\n".to_string());
 
     let file = file::File {
+        globl,
         text_ss,
         data_ss,
     };

@@ -19,7 +19,11 @@ fn hello_world() {
     let data_ss = data::dstring("my_string".to_string(), "Hello".to_string())
         + data::dstring("my_string2".to_string(), " World\n".to_string());
 
-    let file = file::File { text_ss, data_ss };
+    let file = file::File {
+        globl: Some(new_label("main")),
+        text_ss,
+        data_ss,
+    };
 
     file.print_in(file_name).unwrap();
 
@@ -51,7 +55,11 @@ fn hello_world() {
 
     let data_ss = data::dstring("my_string".to_string(), "Hello World\n".to_string());
 
-    let file = file::File { text_ss, data_ss };
+    let file = file::File {
+        global: Some(new_label("main")),
+        text_ss,
+        data_ss,
+    };
 
     file.print_in(file_name).unwrap();
     Command::new("gcc")
