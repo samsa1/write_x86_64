@@ -215,6 +215,7 @@ macro_rules! addr {
 
 #[cfg(target_os = "macos")]
 #[macro_export]
+/// lab operator from <https://www.lri.fr/~filliatr/ens/compil/lib/x86_64.ml.html>
 macro_rules! lab {
     ($label:expr) => {
         $crate::reg::Operand::LabRelAddr($label)
@@ -223,6 +224,7 @@ macro_rules! lab {
 
 #[cfg(target_os = "linux")]
 #[macro_export]
+/// lab operator from <https://www.lri.fr/~filliatr/ens/compil/lib/x86_64.ml.html>
 macro_rules! lab {
     ($label:expr) => {
         $crate::reg::Operand::LabAbsAddr($label)
@@ -231,6 +233,7 @@ macro_rules! lab {
 
 
 #[macro_export]
+/// ilab operator from <https://www.lri.fr/~filliatr/ens/compil/lib/x86_64.ml.html>
 macro_rules! ilab {
     ($label:expr) => {
         $crate::reg::Operand::LabVal($label)
@@ -390,11 +393,21 @@ pub fn comment(s : String) -> Asm {
 }
 
 #[cfg(target_os = "linux")]
+/// Move address of label in register (implementation is OS dependant)
+/// 
+/// Usefull to get address to string before calling printf
+/// 
+/// Not sure it works on linux, needs to test!
 pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
     movq(reg::Operand::LabAbsAddr(l), reg::Operand::Reg(reg))
 }
 
 #[cfg(target_os = "macos")]
+/// Move address of label in register (implementation is OS dependant)
+/// 
+/// Usefull to get address to string before calling printf
+/// 
+/// Not sure it works on linux, needs to test!
 pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
     leaq(reg::Operand::LabRelAddr(l), reg)
 }

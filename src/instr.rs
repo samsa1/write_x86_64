@@ -21,8 +21,11 @@ pub enum OpOpInstrName {
     Or,
     /// Bitwise Xor
     Xor,
+    /// Left shift
     Shl,
+    /// Logical right shift
     Shr,
+    /// Arithmetic right shift
     Sar,
     /// Compare (set flags based on Sub instr)
     Cmp,
@@ -228,6 +231,7 @@ impl Cond {
     }
 }
 
+/// Conditionnal move instruction
 pub struct CondMove<T: Reg> {
     cond: Cond,
     reg1: Operand<T>,
@@ -235,6 +239,7 @@ pub struct CondMove<T: Reg> {
 }
 
 impl<T: Reg> CondMove<T> {
+    #[doc(hidden)]
     pub fn new(cond: Cond, reg1: Operand<T>, reg2: Operand<T>) -> Self {
         Self { cond, reg1, reg2 }
     }
@@ -252,12 +257,19 @@ impl<T: Reg> Instr for CondMove<T> {
     }
 }
 
+/// Various instructions to move around in the code
 pub enum Goto {
+    /// Call label
     Call(Label),
+    /// Call address
     CallStar(Operand<RegQ>),
+    /// Conditionnal jump
     CondJump(Cond, Label),
+    /// Jump to label
     Jump(Label),
+    /// Jump to address
     JumpStar(Operand<RegQ>),
+    /// Set operand to 0 or 1 based on the condition
     Set(Cond, Operand<RegB>),
 }
 
