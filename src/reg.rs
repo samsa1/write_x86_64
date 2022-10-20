@@ -34,6 +34,7 @@ pub trait Reg {
     const SIZE: Sizes;
 }
 
+#[allow(missing_docs)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// 8 bytes registers
 pub enum RegQ {
@@ -86,6 +87,7 @@ impl Reg for RegQ {
     const SIZE: Sizes = Sizes::Quad;
 }
 
+#[allow(missing_docs)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// 4 bytes registers
 pub enum RegL {
@@ -138,6 +140,7 @@ impl Reg for RegL {
     const SIZE: Sizes = Sizes::Long;
 }
 
+#[allow(missing_docs)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// 2 bytes registers
 pub enum RegW {
@@ -190,6 +193,7 @@ impl Reg for RegW {
     const SIZE: Sizes = Sizes::Word;
 }
 
+#[allow(missing_docs)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// 1 bytes registers
 pub enum RegB {

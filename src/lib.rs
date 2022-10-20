@@ -17,7 +17,6 @@ pub mod data;
 pub mod file;
 
 /// Defines instructions
-#[doc(hidden)]
 pub mod instr;
 
 /// Defines registers and operands
@@ -251,7 +250,7 @@ build_instr_op_op!(Move, movb, movw, movl, movq);
 
 //// Arithmetic
 
-build_instr_op_op!(Lea, leab, leaw, leal, leaq);
+build_instr_op_reg!(Lea, leab, leaw, leal, leaq);
 
 build_instr_op!(Inc, incb, incw, incl, incq);
 
@@ -294,8 +293,9 @@ build_instr_op_op!(Xor, xorb, xorw, xorl, xorq);
 
 //// Shifts
 
-// Todo
-
+build_instr_op_op!(Shl, shlb, shlw, shll, shlq);
+build_instr_op_op!(Shr, shrb, shrw, shrl, shrq);
+build_instr_op_op!(Sar, sarb, sarw, sarl, sarq);
 
 //// Jumps
 
@@ -341,17 +341,17 @@ pub fn jcc(cond : instr::Cond, label : reg::Label) -> Asm {
 
 /// Conditional jump if zero
 pub fn jz(label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::JZ, label)))
+    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::Z, label)))
 }
 
 /// Conditional jump if not zero
 pub fn jnz(label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::JNZ, label)))
+    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::NZ, label)))
 }
 
 /// Conditional jump if above equal
 pub fn jae(label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::JAE, label)))
+    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::AE, label)))
 }
 
 //// Conditions
@@ -373,8 +373,8 @@ pub fn pushq(op: reg::Operand<reg::RegQ>) -> Asm {
 }
 
 /// Pop 8-bytes from stack
-pub fn popq(op: reg::Operand<reg::RegQ>) -> Asm {
-    Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::Pop, op)))
+pub fn popq(op: reg::RegQ) -> Asm {
+    Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::Pop, reg::Operand::Reg(op))))
 }
 
 //// Various others
@@ -390,13 +390,13 @@ pub fn comment(s : String) -> Asm {
 }
 
 #[cfg(target_os = "linux")]
-pub fn deplq(l: reg::Label, op: reg::Operand<reg::RegQ>) -> Asm {
-    movq(reg::Operand::LabAbsAddr(l), op)
+pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
+    movq(reg::Operand::LabAbsAddr(l), reg::Operand::Reg(reg))
 }
 
 #[cfg(target_os = "macos")]
-pub fn deplq(l: reg::Label, op: reg::Operand<reg::RegQ>) -> Asm {
-    leaq(reg::Operand::LabRelAddr(l), op)
+pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
+    leaq(reg::Operand::LabRelAddr(l), reg)
 }
 
 

@@ -62,6 +62,7 @@ pub struct InstrOpOp<T: Reg> {
 }
 
 impl<T: Reg> InstrOpOp<T> {
+    #[doc(hidden)]
     pub fn new(instr: OpOpInstrName, reg1: Operand<T>, reg2: Operand<T>) -> Self {
         Self { instr, reg1, reg2 }
     }
@@ -80,50 +81,28 @@ impl<T: Reg> Instr for InstrOpOp<T> {
     }
 }
 
-/*pub enum OpRegInstrName {
-    Lea,
-}
-
-impl OpRegInstrName {
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            Lea => "lea",
-        }
-    }
-}
-
-pub struct InstrOpReg<T: Reg> {
-    instr: OpRegInstrName,
-    reg1: Operand<T>,
-    reg2: T,
-}
-
-impl<T: Reg> Instr for InstrOpReg<T> {
-    fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
-        file.write_all(b"\t")?;
-        file.write_all(self.instr.to_str().as_bytes())?;
-        file.write_all(&[T::SIZE.to_char() as u8])?;
-        file.write_all(b" ")?;
-        self.reg1.write_in(file)?;
-        file.write_all(b", ")?;
-        self.reg2.write_in(file)?;
-        file.write_all(b"\n")
-    }
-}*/
-
+/// Instruction with only one argument
 pub enum OpInstrName {
+    /// Increment value
     Inc,
+    /// Decrement value
     Dec,
+    /// Arithmetic negation
     Neg,
+    /// Bitwise negation
     Not,
+    /// Push on stack
     Push,
+    /// Pop from stack
     Pop,
+    /// Unsigned division (beware of edx/rdc register)
     UnsignedDiv,
+    /// Signed division (beware of edx/rdc register)
     SignedDiv,
 }
 
 impl OpInstrName {
-    pub fn to_str(&self) -> &'static str {
+    fn to_str(&self) -> &'static str {
         match self {
             Self::Inc => "inc",
             Self::Dec => "dec",
@@ -137,12 +116,14 @@ impl OpInstrName {
     }
 }
 
+/// Instruction with only one argument
 pub struct InstrOp<T: Reg> {
     instr: OpInstrName,
     reg: Operand<T>,
 }
 
 impl<T: Reg> InstrOp<T> {
+    #[doc(hidden)]
     pub fn new(instr: OpInstrName, reg: Operand<T>) -> Self {
         Self { instr, reg }
     }
@@ -159,13 +140,21 @@ impl<T: Reg> Instr for InstrOp<T> {
     }
 }
 
+/// Instruction with no argument
 pub enum InstrNoArg {
+    /// Equivalent to popq rip
     Ret,
+    /// Complex return from call
     Leave,
+    /// Syscall
     Syscall,
+    /// Hlt instruction
     Hlt,
+    /// Sign extend %eax into %edx::%eax
     Cltd,
+    /// Sign extend %rax into %rdx::%rax
     Cqto,
+    /// Does nothing
     Nop,
 }
 
@@ -184,40 +173,57 @@ impl Instr for InstrNoArg {
     }
 }
 
+/// Various conditionals
+/// 
+/// Informations given as FLAGS = meaning after cmp
 pub enum Cond {
-    JE,
-    JZ,
-    JNE,
-    JNZ,
-    JS,
-    JNS,
-    JG,
-    JGE,
-    JL,
-    JLE,
-    JA,
-    JAE,
-    JB,
-    JBE,
+    /// Same as Z
+    E,
+    /// ZF = equal to 0
+    Z,
+    /// Same as NZ
+    NE,
+    /// not(ZF) = equal to 0
+    NZ,
+    /// SF = negative
+    S,
+    /// not(SF) = non-negative
+    NS,
+    /// not(SF xor OF) and not(ZF) = greater
+    G,
+    /// not(SF xor OF) = greater or equal
+    GE,
+    /// SF xor OF = lower
+    L,
+    /// (SF xor OF) or ZF = lower or equal
+    LE,
+    /// not(CF) and not(ZF) = above (unsigned greater)
+    A,
+    /// not(CF) = above or equal (unsigned greater or equal)
+    AE,
+    /// CF = below (unsigned lower)
+    B,
+    /// CF or ZF = below or equal (unsigned lower or equal)
+    BE,
 }
 
 impl Cond {
     fn to_str(&self) -> &'static str {
         match self {
-            Self::JE => "e",
-            Self::JZ => "z",
-            Self::JNE => "ne",
-            Self::JNZ => "nz",
-            Self::JS => "s",
-            Self::JNS => "ns",
-            Self::JG => "g",
-            Self::JGE => "ge",
-            Self::JL => "l",
-            Self::JLE => "le",
-            Self::JA => "a",
-            Self::JAE => "ae",
-            Self::JB => "b",
-            Self::JBE => "be",
+            Self::E => "e",
+            Self::Z => "z",
+            Self::NE => "ne",
+            Self::NZ => "nz",
+            Self::S => "s",
+            Self::NS => "ns",
+            Self::G => "g",
+            Self::GE => "ge",
+            Self::L => "l",
+            Self::LE => "le",
+            Self::A => "a",
+            Self::AE => "ae",
+            Self::B => "b",
+            Self::BE => "be",
         }
     }
 }

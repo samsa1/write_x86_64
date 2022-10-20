@@ -29,8 +29,7 @@ macro_rules! def_regb {
 
 macro_rules! build_instr_op_op {
     ($op:ident, $nameb:ident, $namew:ident, $namel:ident, $nameq:ident) => {
-
-        /// $op instructions between 8-bytes operands
+        /// Instructions between 1-bytes operands
         pub fn $nameb(reg1: reg::Operand<reg::RegB>, reg2: reg::Operand<reg::RegB>) -> Asm {
             Asm::Instr(Box::new(instr::InstrOpOp::new(
                 instr::OpOpInstrName::$op,
@@ -39,36 +38,11 @@ macro_rules! build_instr_op_op {
             )))
         }
 
-        /// $op instructions between 4-bytes operands
-        pub fn $namew(reg1: reg::Operand<reg::RegW>, reg2: reg::Operand<reg::RegW>) -> Asm {
-            Asm::Instr(Box::new(instr::InstrOpOp::new(
-                instr::OpOpInstrName::$op,
-                reg1,
-                reg2,
-            )))
-        }
-
-        /// $op instructions between 2-bytes operands
-        pub fn $namel(reg1: reg::Operand<reg::RegL>, reg2: reg::Operand<reg::RegL>) -> Asm {
-            Asm::Instr(Box::new(instr::InstrOpOp::new(
-                instr::OpOpInstrName::$op,
-                reg1,
-                reg2,
-            )))
-        }
-
-        /// $op instructions between 1-bytes operands
-        pub fn $nameq(reg1: reg::Operand<reg::RegQ>, reg2: reg::Operand<reg::RegQ>) -> Asm {
-            Asm::Instr(Box::new(instr::InstrOpOp::new(
-                instr::OpOpInstrName::$op,
-                reg1,
-                reg2,
-            )))
-        }
+        build_instr_op_op!($op, $namew, $namel, $nameq);
     };
 
     ($op:ident, $namew:ident, $namel:ident, $nameq:ident) => {
-        /// $op instructions between 4-bytes operands
+        /// Instructions between 2-bytes operands
         pub fn $namew(reg1: reg::Operand<reg::RegW>, reg2: reg::Operand<reg::RegW>) -> Asm {
             Asm::Instr(Box::new(instr::InstrOpOp::new(
                 instr::OpOpInstrName::$op,
@@ -77,7 +51,11 @@ macro_rules! build_instr_op_op {
             )))
         }
 
-        /// $op instructions between 2-bytes operands
+        build_instr_op_op!($op, $namel, $nameq);
+    };
+
+    ($op:ident, $namel:ident, $nameq:ident) => {
+        /// Instructions between 4-bytes operands
         pub fn $namel(reg1: reg::Operand<reg::RegL>, reg2: reg::Operand<reg::RegL>) -> Asm {
             Asm::Instr(Box::new(instr::InstrOpOp::new(
                 instr::OpOpInstrName::$op,
@@ -86,7 +64,11 @@ macro_rules! build_instr_op_op {
             )))
         }
 
-        /// $op instructions between 1-bytes operands
+        build_instr_op_op!($op, $nameq);
+    };
+
+    ($op:ident, $nameq:ident) => {
+        /// Instructions between 8-bytes operands
         pub fn $nameq(reg1: reg::Operand<reg::RegQ>, reg2: reg::Operand<reg::RegQ>) -> Asm {
             Asm::Instr(Box::new(instr::InstrOpOp::new(
                 instr::OpOpInstrName::$op,
@@ -97,36 +79,89 @@ macro_rules! build_instr_op_op {
     };
 }
 
+macro_rules! build_instr_op_reg {
+    ($op:ident, $nameb:ident, $namew:ident, $namel:ident, $nameq:ident) => {
+        /// Instructions between 1-bytes operands
+        pub fn $nameb(reg1: reg::Operand<reg::RegB>, reg2: reg::RegB) -> Asm {
+            Asm::Instr(Box::new(instr::InstrOpOp::new(
+                instr::OpOpInstrName::$op,
+                reg1,
+                reg::Operand::Reg(reg2),
+            )))
+        }
+
+        build_instr_op_reg!($op, $namew, $namel, $nameq);
+    };
+
+    ($op:ident, $namew:ident, $namel:ident, $nameq:ident) => {
+        /// Instructions between 2-bytes operands
+        pub fn $namew(reg1: reg::Operand<reg::RegW>, reg2: reg::RegW) -> Asm {
+            Asm::Instr(Box::new(instr::InstrOpOp::new(
+                instr::OpOpInstrName::$op,
+                reg1,
+                reg::Operand::Reg(reg2),
+            )))
+        }
+
+        build_instr_op_reg!($op, $namel, $nameq);
+    };
+
+    ($op:ident, $namel:ident, $nameq:ident) => {
+        /// Instructions between 4-bytes operands
+        pub fn $namel(reg1: reg::Operand<reg::RegL>, reg2: reg::RegL) -> Asm {
+            Asm::Instr(Box::new(instr::InstrOpOp::new(
+                instr::OpOpInstrName::$op,
+                reg1,
+                reg::Operand::Reg(reg2),
+            )))
+        }
+
+        build_instr_op_reg!($op, $nameq);
+    };
+
+    ($op:ident, $nameq:ident) => {
+        /// Instructions between 8-bytes operands
+        pub fn $nameq(reg1: reg::Operand<reg::RegQ>, reg2 : reg::RegQ) -> Asm {
+            Asm::Instr(Box::new(instr::InstrOpOp::new(
+                instr::OpOpInstrName::$op,
+                reg1,
+                reg::Operand::Reg(reg2),
+            )))
+        }
+    };
+}
+
+
 macro_rules! build_instr_op {
     ($op:ident, $nameb:ident, $namew:ident, $namel:ident, $nameq:ident) => {
-        /// $op instructions between 1-bytes operands
+        /// Instructions on 1-bytes operands
         pub fn $nameb(reg: reg::Operand<reg::RegB>) -> Asm {
             Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::$op, reg)))
         }
 
-        /// $op instructions between 2-bytes operands
+        build_instr_op!($op, $namew, $namel, $nameq);
+    };
+
+    ($op:ident, $namew:ident, $namel:ident, $nameq:ident) => {
+        /// Instructions on 2-bytes operands
         pub fn $namew(reg: reg::Operand<reg::RegW>) -> Asm {
             Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::$op, reg)))
         }
-
-        /// $op instructions between 4-bytes operands
-        pub fn $namel(reg: reg::Operand<reg::RegL>) -> Asm {
-            Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::$op, reg)))
-        }
-
-        /// $op instructions between 8-bytes operands
-        pub fn $nameq(reg: reg::Operand<reg::RegQ>) -> Asm {
-            Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::$op, reg)))
-        }
-    };
+        build_instr_op!($op, $namel, $nameq);
+    };    
 
     ($op:ident, $namel:ident, $nameq:ident) => {
-        /// $op instructions between 4-bytes operands
+        /// Instructions on 4-bytes operands
         pub fn $namel(reg: reg::Operand<reg::RegL>) -> Asm {
             Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::$op, reg)))
         }
 
-        /// $op instructions between 8-bytes operands
+        build_instr_op!($op, $nameq);
+    };
+
+    ($op:ident, $nameq:ident) => {
+
+        /// Instructions on 8-bytes operands
         pub fn $nameq(reg: reg::Operand<reg::RegQ>) -> Asm {
             Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::$op, reg)))
         }
