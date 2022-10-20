@@ -38,7 +38,7 @@ pub trait Reg {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// 8 bytes registers
 pub enum RegQ {
-    Rax, 
+    Rax,
     Rbx,
     Rcx,
     Rdx,
@@ -258,7 +258,7 @@ impl Reg for RegB {
 /// Type representing the various operands
 pub enum Operand<T: Reg> {
     /// Address at 1 + 2 + 3 * 4
-    Addr(i64, RegQ, Option<RegQ>, u8), 
+    Addr(i64, RegQ, Option<RegQ>, u8),
     /// Direct access to register
     Reg(T),
     /// Label relative to RIP
@@ -293,9 +293,7 @@ impl<T: Reg> Operand<T> {
                 label.write_in(file)?;
                 file.write_all(b"(%rip)")
             }
-            Self::LabAbsAddr(label) => {
-                label.write_in(file)
-            }
+            Self::LabAbsAddr(label) => label.write_in(file),
             Self::LabVal(label) => {
                 file.write_all(b"$")?;
                 label.write_in(file)
@@ -306,18 +304,16 @@ impl<T: Reg> Operand<T> {
 }
 
 #[derive(Debug, Clone)]
-/// Label 
+/// Label
 pub struct Label {
     name: String,
 }
 
 impl Label {
-
     /// Create label from string
     pub fn from_str(name: String) -> Self {
         Self { name }
     }
-
 
     /// Printf function label
     pub fn printf() -> Self {
@@ -360,7 +356,7 @@ impl Label {
         file.write_all(b"_")?;
         file.write_all(self.name.as_bytes())
     }
-    
+
     #[cfg(target_os = "linux")]
     /// Write label in file (implementation differs on linux and mac)
     pub fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {

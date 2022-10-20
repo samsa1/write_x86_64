@@ -177,7 +177,7 @@ impl Instr for InstrNoArg {
 }
 
 /// Various conditionals
-/// 
+///
 /// Informations given as FLAGS = meaning after cmp
 pub enum Cond {
     /// Same as Z

@@ -1,11 +1,11 @@
 //! Module to help people generate x86_64 code in Rust
-//! 
+//!
 //! Inspired from <https://www.lri.fr/~filliatr/ens/compil/lib/x86_64.ml.html>
-//! 
+//!
 //! This crate wants to be an equivalent of the above code
-//! 
+//!
 
-// Author : 
+// Author :
 // 2022 Samuel VIVIEN
 
 #![warn(missing_docs)]
@@ -25,6 +25,9 @@ pub mod reg;
 #[macro_use]
 mod macros;
 
+#[cfg(test)]
+mod tests;
+
 use std::io::prelude::*;
 use std::ops::Add;
 
@@ -36,7 +39,7 @@ pub fn nop() -> Asm {
 }
 
 /// Data structure representing assembly
-/// 
+///
 /// It is recommended to not build this type yourself but instead use the functions provided
 pub enum Asm {
     /// Concatenation of assembly code
@@ -49,7 +52,6 @@ pub enum Asm {
     /// Comment
     Comment(String),
 }
-
 
 impl Add for Asm {
     type Output = Self;
@@ -81,9 +83,7 @@ impl Asm {
     }
 }
 
-
 //// Registers
-
 
 def_regq!(RAX, Rax);
 def_regq!(RBX, Rbx);
@@ -193,9 +193,9 @@ macro_rules! reg {
 /// addr!(rsp) => (%rsp)
 ///
 /// addr!(offset, rbp) => offset(%rbp)
-/// 
+///
 /// addr!(offset, rbp, rax) => offset(%rbp, %rax, 1)
-/// 
+///
 /// addr!(offset, rbp, rax, scale) => offset(%rbp, %rax, scale)
 #[macro_export]
 macro_rules! addr {
@@ -231,7 +231,6 @@ macro_rules! lab {
     };
 }
 
-
 #[macro_export]
 /// ilab operator from <https://www.lri.fr/~filliatr/ens/compil/lib/x86_64.ml.html>
 macro_rules! ilab {
@@ -250,7 +249,6 @@ build_instr_op_op!(Move, movb, movw, movl, movq);
 
 // movabsq not implemented
 
-
 //// Arithmetic
 
 build_instr_op_reg!(Lea, leab, leaw, leal, leaq);
@@ -266,7 +264,6 @@ build_instr_op_op!(Add, addb, addw, addl, addq);
 build_instr_op_op!(Sub, subb, subw, subl, subq);
 
 build_instr_op_op!(IMul, imulw, imull, imulq);
-
 
 /// sign extend EAX into EDX::EAX
 pub fn cltd() -> Asm {
@@ -293,7 +290,6 @@ build_instr_op_op!(Or, orb, orw, orl, orq);
 
 build_instr_op_op!(Xor, xorb, xorw, xorl, xorq);
 
-
 //// Shifts
 
 build_instr_op_op!(Shl, shlb, shlw, shll, shlq);
@@ -301,7 +297,6 @@ build_instr_op_op!(Shr, shrb, shrw, shrl, shrq);
 build_instr_op_op!(Sar, sarb, sarw, sarl, sarq);
 
 //// Jumps
-
 
 // Function calls and return
 
@@ -311,7 +306,7 @@ pub fn call(label: reg::Label) -> Asm {
 }
 
 /// Call address
-pub fn call_str(op : reg::Operand<reg::RegQ>) -> Asm {
+pub fn call_str(op: reg::Operand<reg::RegQ>) -> Asm {
     Asm::Instr(Box::new(instr::Goto::CallStar(op)))
 }
 
@@ -331,14 +326,14 @@ pub fn jmp(label: reg::Label) -> Asm {
 }
 
 /// Jump to address
-pub fn jmp_star(op : reg::Operand<reg::RegQ>) -> Asm {
+pub fn jmp_star(op: reg::Operand<reg::RegQ>) -> Asm {
     Asm::Instr(Box::new(instr::Goto::JumpStar(op)))
 }
 
 ////// Conditional jumps
 
 /// Conditional jump
-pub fn jcc(cond : instr::Cond, label : reg::Label) -> Asm {
+pub fn jcc(cond: instr::Cond, label: reg::Label) -> Asm {
     Asm::Instr(Box::new(instr::Goto::CondJump(cond, label)))
 }
 
@@ -377,7 +372,10 @@ pub fn pushq(op: reg::Operand<reg::RegQ>) -> Asm {
 
 /// Pop 8-bytes from stack
 pub fn popq(op: reg::RegQ) -> Asm {
-    Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::Pop, reg::Operand::Reg(op))))
+    Asm::Instr(Box::new(instr::InstrOp::new(
+        instr::OpInstrName::Pop,
+        reg::Operand::Reg(op),
+    )))
 }
 
 //// Various others
@@ -388,15 +386,15 @@ pub fn label(l: reg::Label) -> Asm {
 }
 
 /// Add comment to Assembly (should not contain de line break!)
-pub fn comment(s : String) -> Asm {
+pub fn comment(s: String) -> Asm {
     Asm::Comment(s)
 }
 
 #[cfg(target_os = "linux")]
 /// Move address of label in register (implementation is OS dependant)
-/// 
+///
 /// Usefull to get address to string before calling printf
-/// 
+///
 /// Not sure it works on linux, needs to test!
 pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
     movq(reg::Operand::LabAbsAddr(l), reg::Operand::Reg(reg))
@@ -404,16 +402,13 @@ pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
 
 #[cfg(target_os = "macos")]
 /// Move address of label in register (implementation is OS dependant)
-/// 
+///
 /// Usefull to get address to string before calling printf
-/// 
+///
 /// Not sure it works on linux, needs to test!
 pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
     leaq(reg::Operand::LabRelAddr(l), reg)
 }
-
-
-
 
 // cmovb is not valid
 
@@ -442,4 +437,9 @@ pub fn cmovq(
     reg2: reg::Operand<reg::RegQ>,
 ) -> Asm {
     Asm::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
+}
+
+/// Convert str to label name
+pub fn new_label(name: &str) -> reg::Label {
+    reg::Label::from_str(name.to_string())
 }

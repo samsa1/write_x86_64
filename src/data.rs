@@ -100,6 +100,10 @@ pub struct Data {
 }
 
 impl Data {
+    /// Create an empty data segment
+    pub fn empty() -> Self {
+        Self { infos: Vec::new() }
+    }
 
     /// Create new chunck of data segment with optionally a label
     /// and values to put with it
@@ -146,7 +150,6 @@ impl Add for Data {
         Self { infos }
     }
 }
-
 
 /// Place a constant string (end with 0) in data area
 pub fn dstring(name: String, data: String) -> Data {
