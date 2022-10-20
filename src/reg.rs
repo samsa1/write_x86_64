@@ -278,14 +278,14 @@ impl<T: Reg> Operand<T> {
         match self {
             Self::Reg(reg) => reg.write_in(file),
             Self::Addr(offset, reg, index, scale) => {
-                file.write_all(format!("{offset}(").as_bytes())?;
+                file.write_all(format!("{}(", offset).as_bytes())?;
                 reg.write_in(file)?;
                 match index {
                     None => file.write_all(b")"),
                     Some(index) => {
                         file.write_all(b", ")?;
                         index.write_in(file)?;
-                        file.write_all(format!(", {scale})").as_bytes())
+                        file.write_all(format!(", {})", scale).as_bytes())
                     }
                 }
             }
@@ -298,7 +298,7 @@ impl<T: Reg> Operand<T> {
                 file.write_all(b"$")?;
                 label.write_in(file)
             }
-            Self::Imm(id) => file.write_all(format!("${id}").as_bytes()),
+            Self::Imm(id) => file.write_all(format!("${}", id).as_bytes()),
         }
     }
 }

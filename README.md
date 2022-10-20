@@ -46,3 +46,8 @@ fn main() {
 Contribution are welcomed, you can also ask to add some
 instructions if you are using this crate and would want more
 instructions available.
+
+
+## Project using this crate:
+
+- A compiler for a subset of Rust : https://github.com/samsa1/SamRustCompiler

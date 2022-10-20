@@ -1,4 +1,4 @@
-use super::Asm;
+use super::Text;
 use std::collections::HashMap;
 use std::fs;
 use std::io::prelude::*;
@@ -6,14 +6,14 @@ use std::io::prelude::*;
 /// Structure representing a file
 pub struct File {
     /// Code segment
-    pub text_ss: Asm,
+    pub text_ss: Text,
     /// Data segment
     pub data_ss: super::data::Data,
 }
 
 impl File {
     #[doc(hidden)]
-    pub fn new(text_ss: Asm, strings: HashMap<String, String>) -> Self {
+    pub fn new(text_ss: Text, strings: HashMap<String, String>) -> Self {
         let data_ss = super::data::Data::from_strings(strings);
         Self { text_ss, data_ss }
     }

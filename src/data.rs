@@ -28,10 +28,10 @@ impl DataEL {
                 let mut vec = vec.iter();
                 match vec.next() {
                     None => (),
-                    Some(el) => file.write_all(format!(" {el}").as_bytes())?,
+                    Some(el) => file.write_all(format!(" {}", el).as_bytes())?,
                 }
                 for el in vec {
-                    file.write_all(format!(", {el}").as_bytes())?;
+                    file.write_all(format!(", {}", el).as_bytes())?;
                 }
                 file.write_all(b"\n")
             }
@@ -40,10 +40,10 @@ impl DataEL {
                 let mut vec = vec.iter();
                 match vec.next() {
                     None => (),
-                    Some(el) => file.write_all(format!(" {el}").as_bytes())?,
+                    Some(el) => file.write_all(format!(" {}", el).as_bytes())?,
                 }
                 for el in vec {
-                    file.write_all(format!(", {el}").as_bytes())?;
+                    file.write_all(format!(", {}", el).as_bytes())?;
                 }
                 file.write_all(b"\n")
             }
@@ -52,10 +52,10 @@ impl DataEL {
                 let mut vec = vec.iter();
                 match vec.next() {
                     None => (),
-                    Some(el) => file.write_all(format!(" {el}").as_bytes())?,
+                    Some(el) => file.write_all(format!(" {}", el).as_bytes())?,
                 }
                 for el in vec {
-                    file.write_all(format!(", {el}").as_bytes())?;
+                    file.write_all(format!(", {}", el).as_bytes())?;
                 }
                 file.write_all(b"\n")
             }
@@ -64,10 +64,10 @@ impl DataEL {
                 let mut vec = vec.iter();
                 match vec.next() {
                     None => (),
-                    Some(el) => file.write_all(format!(" {el}").as_bytes())?,
+                    Some(el) => file.write_all(format!(" {}", el).as_bytes())?,
                 }
                 for el in vec {
-                    file.write_all(format!(", {el}").as_bytes())?;
+                    file.write_all(format!(", {}", el).as_bytes())?;
                 }
                 file.write_all(b"\n")
             }
@@ -89,7 +89,7 @@ impl DataEL {
                 file.write_all(str.as_bytes())?;
                 file.write_all(b"\"\n")
             }
-            Self::Space(i) => file.write_all(format!("\t.space {i}\n").as_bytes()),
+            Self::Space(i) => file.write_all(format!("\t.space {}\n", i).as_bytes()),
         }
     }
 }

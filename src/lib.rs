@@ -4,6 +4,33 @@
 //!
 //! This crate wants to be an equivalent of the above code
 //!
+//! For writting files see
+//! 
+//! [`data::Data`], [`file::File`] and [Text] data structures
+//!
+//! Registers %rax -> %r15 are all accessible for 8, 16, 32 and 64 bits.
+//! Write name in capital letters to access them
+//! 
+//! Operands can be obtained with [`lab`], [`ilab`], [`addr`], [`reg!`] and [`immb`] to [`immq`].
+//! 
+//! All instruction are available for various sizes.
+//! 
+//! Transfert instruction : [`movq`]
+//! 
+//! Arithmetic : [`leaq`], [`incq`], [`decq`], [`negq`], [`addq`], [`subq`], [`imulq`], [`cqto`], [`idivq`], [`divq`]
+//! 
+//! Logic : [`notq`], [`andq`], [`orq`], [`xorq`]
+//! 
+//! Shifts : [`shlq`], [`shrq`], [`sarq`]
+//! 
+//! Jumps : [`call`], [`call_star`], [`leave`], [`ret`], [`jmp`], [`jmp_star`], [`jcc`]
+//! 
+//! Conditions : [`cmpb`], [`testq`], [`set`], [`cmovq`]
+//! 
+//! Stack : [`pushq`], [`popq`]
+//! 
+//! Various others : [`label`], [`comment`]
+
 
 // Author :
 // 2022 Samuel VIVIEN
@@ -34,16 +61,16 @@ use std::ops::Add;
 // Code
 
 /// nop instruction (does nothing)
-pub fn nop() -> Asm {
-    Asm::Instr(Box::new(instr::InstrNoArg::Nop))
+pub fn nop() -> Text {
+    Text::Instr(Box::new(instr::InstrNoArg::Nop))
 }
 
 /// Data structure representing assembly
 ///
 /// It is recommended to not build this type yourself but instead use the functions provided
-pub enum Asm {
+pub enum Text {
     /// Concatenation of assembly code
-    Concat(Vec<Asm>),
+    Concat(Vec<Text>),
     /// Instruction
     Instr(Box<dyn instr::Instr>),
     /// Label
@@ -53,7 +80,7 @@ pub enum Asm {
     Comment(String),
 }
 
-impl Add for Asm {
+impl Add for Text {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -61,7 +88,7 @@ impl Add for Asm {
     }
 }
 
-impl Asm {
+impl Text {
     fn write_in(self, file: &mut std::fs::File) -> std::io::Result<()> {
         match self {
             Self::Concat(vec) => {
@@ -266,13 +293,13 @@ build_instr_op_op!(Sub, subb, subw, subl, subq);
 build_instr_op_op!(IMul, imulw, imull, imulq);
 
 /// sign extend EAX into EDX::EAX
-pub fn cltd() -> Asm {
-    Asm::Instr(Box::new(instr::InstrNoArg::Cltd))
+pub fn cltd() -> Text {
+    Text::Instr(Box::new(instr::InstrNoArg::Cltd))
 }
 
 /// sign extend RAX into RDX::RAX
-pub fn cqto() -> Asm {
-    Asm::Instr(Box::new(instr::InstrNoArg::Cqto))
+pub fn cqto() -> Text {
+    Text::Instr(Box::new(instr::InstrNoArg::Cqto))
 }
 
 build_instr_op!(SignedDiv, idivl, idivq);
@@ -301,55 +328,55 @@ build_instr_op_op!(Sar, sarb, sarw, sarl, sarq);
 // Function calls and return
 
 /// Call label
-pub fn call(label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::Call(label)))
+pub fn call(label: reg::Label) -> Text {
+    Text::Instr(Box::new(instr::Goto::Call(label)))
 }
 
 /// Call address
-pub fn call_str(op: reg::Operand<reg::RegQ>) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::CallStar(op)))
+pub fn call_star(op: reg::Operand<reg::RegQ>) -> Text {
+    Text::Instr(Box::new(instr::Goto::CallStar(op)))
 }
 
 /// Leave instruction
-pub fn leave() -> Asm {
-    Asm::Instr(Box::new(instr::InstrNoArg::Leave))
+pub fn leave() -> Text {
+    Text::Instr(Box::new(instr::InstrNoArg::Leave))
 }
 
 /// Equivalent to popq %rip
-pub fn ret() -> Asm {
-    Asm::Instr(Box::new(instr::InstrNoArg::Ret))
+pub fn ret() -> Text {
+    Text::Instr(Box::new(instr::InstrNoArg::Ret))
 }
 
 /// Jump to label
-pub fn jmp(label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::Jump(label)))
+pub fn jmp(label: reg::Label) -> Text {
+    Text::Instr(Box::new(instr::Goto::Jump(label)))
 }
 
 /// Jump to address
-pub fn jmp_star(op: reg::Operand<reg::RegQ>) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::JumpStar(op)))
+pub fn jmp_star(op: reg::Operand<reg::RegQ>) -> Text {
+    Text::Instr(Box::new(instr::Goto::JumpStar(op)))
 }
 
 ////// Conditional jumps
 
 /// Conditional jump
-pub fn jcc(cond: instr::Cond, label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::CondJump(cond, label)))
+pub fn jcc(cond: instr::Cond, label: reg::Label) -> Text {
+    Text::Instr(Box::new(instr::Goto::CondJump(cond, label)))
 }
 
 /// Conditional jump if zero
-pub fn jz(label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::Z, label)))
+pub fn jz(label: reg::Label) -> Text {
+    Text::Instr(Box::new(instr::Goto::CondJump(instr::Cond::Z, label)))
 }
 
 /// Conditional jump if not zero
-pub fn jnz(label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::NZ, label)))
+pub fn jnz(label: reg::Label) -> Text {
+    Text::Instr(Box::new(instr::Goto::CondJump(instr::Cond::NZ, label)))
 }
 
 /// Conditional jump if above equal
-pub fn jae(label: reg::Label) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::AE, label)))
+pub fn jae(label: reg::Label) -> Text {
+    Text::Instr(Box::new(instr::Goto::CondJump(instr::Cond::AE, label)))
 }
 
 //// Conditions
@@ -359,20 +386,20 @@ build_instr_op_op!(Cmp, cmpb, cmpw, cmpl, cmpq);
 build_instr_op_op!(Test, testb, testw, testl, testq);
 
 /// Conditionnal set
-pub fn set(cond: instr::Cond, reg: reg::Operand<reg::RegB>) -> Asm {
-    Asm::Instr(Box::new(instr::Goto::Set(cond, reg)))
+pub fn set(cond: instr::Cond, reg: reg::Operand<reg::RegB>) -> Text {
+    Text::Instr(Box::new(instr::Goto::Set(cond, reg)))
 }
 
 //// Stack handling
 
 /// Push 8-bytes on stack
-pub fn pushq(op: reg::Operand<reg::RegQ>) -> Asm {
-    Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::Push, op)))
+pub fn pushq(op: reg::Operand<reg::RegQ>) -> Text {
+    Text::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::Push, op)))
 }
 
 /// Pop 8-bytes from stack
-pub fn popq(op: reg::RegQ) -> Asm {
-    Asm::Instr(Box::new(instr::InstrOp::new(
+pub fn popq(op: reg::RegQ) -> Text {
+    Text::Instr(Box::new(instr::InstrOp::new(
         instr::OpInstrName::Pop,
         reg::Operand::Reg(op),
     )))
@@ -381,13 +408,13 @@ pub fn popq(op: reg::RegQ) -> Asm {
 //// Various others
 
 /// Place a label
-pub fn label(l: reg::Label) -> Asm {
-    Asm::Label(l)
+pub fn label(l: reg::Label) -> Text {
+    Text::Label(l)
 }
 
 /// Add comment to Assembly (should not contain de line break!)
-pub fn comment(s: String) -> Asm {
-    Asm::Comment(s)
+pub fn comment(s: String) -> Text {
+    Text::Comment(s)
 }
 
 #[cfg(target_os = "linux")]
@@ -396,7 +423,7 @@ pub fn comment(s: String) -> Asm {
 /// Usefull to get address to string before calling printf
 ///
 /// Not sure it works on linux, needs to test!
-pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
+pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Text {
     movq(reg::Operand::LabAbsAddr(l), reg::Operand::Reg(reg))
 }
 
@@ -406,7 +433,7 @@ pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
 /// Usefull to get address to string before calling printf
 ///
 /// Not sure it works on linux, needs to test!
-pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Asm {
+pub fn deplq(l: reg::Label, reg: reg::RegQ) -> Text {
     leaq(reg::Operand::LabRelAddr(l), reg)
 }
 
@@ -417,8 +444,8 @@ pub fn cmovw(
     cond: instr::Cond,
     reg1: reg::Operand<reg::RegW>,
     reg2: reg::Operand<reg::RegW>,
-) -> Asm {
-    Asm::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
+) -> Text {
+    Text::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
 }
 
 /// Conditional move of 4-bytes operands
@@ -426,8 +453,8 @@ pub fn cmovl(
     cond: instr::Cond,
     reg1: reg::Operand<reg::RegL>,
     reg2: reg::Operand<reg::RegL>,
-) -> Asm {
-    Asm::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
+) -> Text {
+    Text::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
 }
 
 /// Conditional move of 8-bytes operands
@@ -435,8 +462,8 @@ pub fn cmovq(
     cond: instr::Cond,
     reg1: reg::Operand<reg::RegQ>,
     reg2: reg::Operand<reg::RegQ>,
-) -> Asm {
-    Asm::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
+) -> Text {
+    Text::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
 }
 
 /// Convert str to label name

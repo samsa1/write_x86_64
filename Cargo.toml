@@ -5,7 +5,7 @@ authors = [
     "Samuel VIVIEN <samuel.vivien@ens.psl.eu>"
 ]
 edition = "2021"
-rust-version = "1.63.0"
+rust-version = "1.56.1"
 description = "Crate to help you write x86_64 assembly code"
 repository = "https://github.com/samsa1/write_x86_64"
 license = "MIT"
