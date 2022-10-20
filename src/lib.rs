@@ -182,6 +182,7 @@ pub fn immb(imm: i8) -> reg::Operand<reg::RegB> {
 
 /// Macro to convert an element of type R with the trait Reg
 /// to an element of type Operand<R>
+#[macro_export]
 macro_rules! reg {
     ($reg:expr) => {
         crate::backend::asm::reg::Operand::Reg($reg)
@@ -197,6 +198,7 @@ macro_rules! reg {
 /// addr!(offset, rbp, rax) => offset(%rbp, %rax, 1)
 /// 
 /// addr!(offset, rbp, rax, scale) => offset(%rbp, %rax, scale)
+#[macro_export]
 macro_rules! addr {
     ($reg:expr) => {
         crate::backend::asm::reg::Operand::Addr(0, $reg, None, 0)
@@ -213,6 +215,7 @@ macro_rules! addr {
 }
 
 #[cfg(target_os = "macos")]
+#[macro_export]
 macro_rules! lab {
     ($label:expr) => {
         crate::backend::asm::reg::Operand::LabRelAddr($label)
@@ -220,6 +223,7 @@ macro_rules! lab {
 }
 
 #[cfg(target_os = "linux")]
+#[macro_export]
 macro_rules! lab {
     ($label:expr) => {
         crate::backend::asm::reg::Operand::LabAbsAddr($label)
@@ -227,6 +231,7 @@ macro_rules! lab {
 }
 
 
+#[macro_export]
 macro_rules! ilab {
     ($label:expr) => {
         crate::backend::asm::reg::Operand::LabVal($label)
