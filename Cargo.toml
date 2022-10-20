@@ -5,6 +5,12 @@ authors = [
     "Samuel VIVIEN <samuel.vivien@ens.psl.eu>"
 ]
 edition = "2021"
+rust-version = "1.63.0"
+description = "Crate to help you write x86_64 assembly code"
+repository = "https://github.com/samsa1/write_x86_64"
+license = "MIT"
+keywords = ["x86", "x86_64"]
+categories = ["data-structures", "compilers"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
