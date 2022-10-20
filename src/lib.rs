@@ -1,14 +1,427 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+//! Module to help people generate x86_64 code in Rust
+//! 
+//! Inspired from <https://www.lri.fr/~filliatr/ens/compil/lib/x86_64.ml.html>
+//! 
+//! This crate wants to be an equivalent of the above code
+//! 
+
+// Author : 
+// 2022 Samuel VIVIEN
+
+#![warn(missing_docs)]
+
+/// Define data segment
+pub mod data;
+
+/// Define structure for whole file
+pub mod file;
+
+/// Defines instructions
+#[doc(hidden)]
+pub mod instr;
+
+/// Defines registers and operands
+pub mod reg;
+
+#[macro_use]
+mod macros;
+
+use std::io::prelude::*;
+use std::ops::Add;
+
+// Code
+
+/// nop instruction (does nothing)
+pub fn nop() -> Asm {
+    Asm::Instr(Box::new(instr::InstrNoArg::Nop))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// Data structure representing assembly
+/// 
+/// It is recommended to not build this type yourself but instead use the functions provided
+pub enum Asm {
+    /// Concatenation of assembly code
+    Concat(Vec<Asm>),
+    /// Instruction
+    Instr(Box<dyn instr::Instr>),
+    /// Label
+    Label(reg::Label),
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    /// Comment
+    Comment(String),
+}
+
+
+impl Add for Asm {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self::Concat(vec![self, other])
     }
+}
+
+impl Asm {
+    fn write_in(self, file: &mut std::fs::File) -> std::io::Result<()> {
+        match self {
+            Self::Concat(vec) => {
+                for asm in vec {
+                    asm.write_in(file)?
+                }
+                Ok(())
+            }
+            Self::Label(label) => {
+                label.write_in(file)?;
+                file.write_all(b":\n")
+            }
+            Self::Instr(instr) => instr.write_in(file),
+            Self::Comment(comment) => {
+                file.write_all(b"\\\\")?;
+                file.write_all(comment.as_bytes())
+            }
+        }
+    }
+}
+
+
+//// Registers
+
+
+def_regq!(RAX, Rax);
+def_regq!(RBX, Rbx);
+def_regq!(RCX, Rcx);
+def_regq!(RDX, Rdx);
+def_regq!(RSI, Rsi);
+def_regq!(RDI, Rdi);
+def_regq!(RBP, Rbp);
+def_regq!(RSP, Rsp);
+def_regq!(R8, R8);
+def_regq!(R9, R9);
+def_regq!(R10, R10);
+def_regq!(R11, R11);
+def_regq!(R12, R12);
+def_regq!(R13, R13);
+def_regq!(R14, R14);
+def_regq!(R15, R15);
+
+def_regl!(EAX, Eax);
+def_regl!(EBX, Ebx);
+def_regl!(ECX, Ecx);
+def_regl!(EDX, Edx);
+def_regl!(ESI, Esi);
+def_regl!(EDI, Edi);
+def_regl!(EBP, Ebp);
+def_regl!(ESP, Esp);
+def_regl!(R8D, R8d);
+def_regl!(R9D, R9d);
+def_regl!(R10D, R10d);
+def_regl!(R11D, R11d);
+def_regl!(R12D, R12d);
+def_regl!(R13D, R13d);
+def_regl!(R14D, R14d);
+def_regl!(R15D, R15d);
+
+def_regw!(AX, Ax);
+def_regw!(BX, Bx);
+def_regw!(CX, Cx);
+def_regw!(DX, Dx);
+def_regw!(SI, Si);
+def_regw!(DI, Di);
+def_regw!(BP, Bp);
+def_regw!(SP, Sp);
+def_regw!(R8W, R8w);
+def_regw!(R9W, R9w);
+def_regw!(R10W, R10w);
+def_regw!(R11W, R11w);
+def_regw!(R12W, R12w);
+def_regw!(R13W, R13w);
+def_regw!(R14W, R14w);
+def_regw!(R15W, R15w);
+
+def_regb!(AL, Al);
+def_regb!(BL, Bl);
+def_regb!(CL, Cl);
+def_regb!(DL, Dl);
+def_regb!(AH, Ah);
+def_regb!(BH, Bh);
+def_regb!(CH, Ch);
+def_regb!(DH, Dh);
+def_regb!(SIL, Sil);
+def_regb!(DIL, Dil);
+def_regb!(BPL, Bpl);
+def_regb!(SPL, Spl);
+def_regb!(R8B, R8b);
+def_regb!(R9B, R9b);
+def_regb!(R10B, R10b);
+def_regb!(R11B, R11b);
+def_regb!(R12B, R12b);
+def_regb!(R13B, R13b);
+def_regb!(R14B, R14b);
+def_regb!(R15B, R15b);
+
+/// Operands
+
+/// Immediate operand for 64-bits instructions
+pub fn immq(imm: i64) -> reg::Operand<reg::RegQ> {
+    reg::Operand::Imm(imm)
+}
+
+/// Immediate operand for 32-bits instructions
+pub fn imml(imm: i32) -> reg::Operand<reg::RegL> {
+    reg::Operand::Imm(imm as i64)
+}
+
+/// Immediate operand for 16-bits instructions
+pub fn immw(imm: i16) -> reg::Operand<reg::RegW> {
+    reg::Operand::Imm(imm as i64)
+}
+
+/// Immediate operand for 8-bits instructions
+pub fn immb(imm: i8) -> reg::Operand<reg::RegB> {
+    reg::Operand::Imm(imm as i64)
+}
+
+/// Macro to convert an element of type R with the trait Reg
+/// to an element of type Operand<R>
+macro_rules! reg {
+    ($reg:expr) => {
+        crate::backend::asm::reg::Operand::Reg($reg)
+    };
+}
+
+/// Create an Operand<R> (for any type R) to access memory
+///
+/// addr!(rsp) => (%rsp)
+///
+/// addr!(offset, rbp) => offset(%rbp)
+/// 
+/// addr!(offset, rbp, rax) => offset(%rbp, %rax, 1)
+/// 
+/// addr!(offset, rbp, rax, scale) => offset(%rbp, %rax, scale)
+macro_rules! addr {
+    ($reg:expr) => {
+        crate::backend::asm::reg::Operand::Addr(0, $reg, None, 0)
+    };
+    ($offset:expr, $reg:expr) => {
+        crate::backend::asm::reg::Operand::Addr($offset, $reg, None, 0)
+    };
+    ($offset:expr, $reg:expr, $reg2:expr) => {
+        crate::backend::asm::reg::Operand::Addr($offset, $reg, Some($reg2), 1)
+    };
+    ($offset:expr, $reg:expr, $reg2:expr, $scale:expr) => {
+        crate::backend::asm::reg::Operand::Addr($offset, $reg, Some($reg2), scale)
+    };
+}
+
+#[cfg(target_os = "macos")]
+macro_rules! lab {
+    ($label:expr) => {
+        crate::backend::asm::reg::Operand::LabRelAddr($label)
+    };
+}
+
+#[cfg(target_os = "linux")]
+macro_rules! lab {
+    ($label:expr) => {
+        crate::backend::asm::reg::Operand::LabAbsAddr($label)
+    };
+}
+
+
+macro_rules! ilab {
+    ($label:expr) => {
+        crate::backend::asm::reg::Operand::LabVal($label)
+    };
+}
+
+//// Instructions
+
+// Data transfer
+
+build_instr_op_op!(Move, movb, movw, movl, movq);
+
+// Move between different sizes not implemented
+
+// movabsq not implemented
+
+
+//// Arithmetic
+
+build_instr_op_op!(Lea, leab, leaw, leal, leaq);
+
+build_instr_op!(Inc, incb, incw, incl, incq);
+
+build_instr_op!(Dec, decb, decw, decl, decq);
+
+build_instr_op!(Neg, negb, negw, negl, negq);
+
+build_instr_op_op!(Add, addb, addw, addl, addq);
+
+build_instr_op_op!(Sub, subb, subw, subl, subq);
+
+build_instr_op_op!(IMul, imulw, imull, imulq);
+
+
+/// sign extend EAX into EDX::EAX
+pub fn cltd() -> Asm {
+    Asm::Instr(Box::new(instr::InstrNoArg::Cltd))
+}
+
+/// sign extend RAX into RDX::RAX
+pub fn cqto() -> Asm {
+    Asm::Instr(Box::new(instr::InstrNoArg::Cqto))
+}
+
+build_instr_op!(SignedDiv, idivl, idivq);
+
+build_instr_op!(UnsignedDiv, divl, divq);
+
+///// Logic operations
+// Those operations are bitwise operations
+
+build_instr_op!(Not, notb, notw, notl, notq);
+
+build_instr_op_op!(And, andb, andw, andl, andq);
+
+build_instr_op_op!(Or, orb, orw, orl, orq);
+
+build_instr_op_op!(Xor, xorb, xorw, xorl, xorq);
+
+
+//// Shifts
+
+// Todo
+
+
+//// Jumps
+
+
+// Function calls and return
+
+/// Call label
+pub fn call(label: reg::Label) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::Call(label)))
+}
+
+/// Call address
+pub fn call_str(op : reg::Operand<reg::RegQ>) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::CallStar(op)))
+}
+
+/// Leave instruction
+pub fn leave() -> Asm {
+    Asm::Instr(Box::new(instr::InstrNoArg::Leave))
+}
+
+/// Equivalent to popq %rip
+pub fn ret() -> Asm {
+    Asm::Instr(Box::new(instr::InstrNoArg::Ret))
+}
+
+/// Jump to label
+pub fn jmp(label: reg::Label) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::Jump(label)))
+}
+
+/// Jump to address
+pub fn jmp_star(op : reg::Operand<reg::RegQ>) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::JumpStar(op)))
+}
+
+////// Conditional jumps
+
+/// Conditional jump
+pub fn jcc(cond : instr::Cond, label : reg::Label) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::CondJump(cond, label)))
+}
+
+/// Conditional jump if zero
+pub fn jz(label: reg::Label) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::JZ, label)))
+}
+
+/// Conditional jump if not zero
+pub fn jnz(label: reg::Label) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::JNZ, label)))
+}
+
+/// Conditional jump if above equal
+pub fn jae(label: reg::Label) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::CondJump(instr::Cond::JAE, label)))
+}
+
+//// Conditions
+
+build_instr_op_op!(Cmp, cmpb, cmpw, cmpl, cmpq);
+
+build_instr_op_op!(Test, testb, testw, testl, testq);
+
+/// Conditionnal set
+pub fn set(cond: instr::Cond, reg: reg::Operand<reg::RegB>) -> Asm {
+    Asm::Instr(Box::new(instr::Goto::Set(cond, reg)))
+}
+
+//// Stack handling
+
+/// Push 8-bytes on stack
+pub fn pushq(op: reg::Operand<reg::RegQ>) -> Asm {
+    Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::Push, op)))
+}
+
+/// Pop 8-bytes from stack
+pub fn popq(op: reg::Operand<reg::RegQ>) -> Asm {
+    Asm::Instr(Box::new(instr::InstrOp::new(instr::OpInstrName::Pop, op)))
+}
+
+//// Various others
+
+/// Place a label
+pub fn label(l: reg::Label) -> Asm {
+    Asm::Label(l)
+}
+
+/// Add comment to Assembly (should not contain de line break!)
+pub fn comment(s : String) -> Asm {
+    Asm::Comment(s)
+}
+
+#[cfg(target_os = "linux")]
+pub fn deplq(l: reg::Label, op: reg::Operand<reg::RegQ>) -> Asm {
+    movq(reg::Operand::LabAbsAddr(l), op)
+}
+
+#[cfg(target_os = "macos")]
+pub fn deplq(l: reg::Label, op: reg::Operand<reg::RegQ>) -> Asm {
+    leaq(reg::Operand::LabRelAddr(l), op)
+}
+
+
+
+
+// cmovb is not valid
+
+/// Conditional move of 2-bytes operands
+pub fn cmovw(
+    cond: instr::Cond,
+    reg1: reg::Operand<reg::RegW>,
+    reg2: reg::Operand<reg::RegW>,
+) -> Asm {
+    Asm::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
+}
+
+/// Conditional move of 4-bytes operands
+pub fn cmovl(
+    cond: instr::Cond,
+    reg1: reg::Operand<reg::RegL>,
+    reg2: reg::Operand<reg::RegL>,
+) -> Asm {
+    Asm::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
+}
+
+/// Conditional move of 8-bytes operands
+pub fn cmovq(
+    cond: instr::Cond,
+    reg1: reg::Operand<reg::RegQ>,
+    reg2: reg::Operand<reg::RegQ>,
+) -> Asm {
+    Asm::Instr(Box::new(instr::CondMove::new(cond, reg1, reg2)))
 }
