@@ -15,7 +15,6 @@ pub struct File {
 }
 
 impl File {
-
     /// Method to print assembly file in given file
     pub fn print_in(self, file_name: &str) -> std::io::Result<()> {
         let mut file = fs::File::create(file_name)?;

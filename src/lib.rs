@@ -271,6 +271,105 @@ macro_rules! ilab {
 
 build_instr_op_op!(Move, movb, movw, movl, movq);
 
+/// Sign extend for 1-byte to 2-bytes
+pub fn movsbw(reg1: reg::Operand<reg::RegB>, reg2: reg::RegW) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movs,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Sign extend for 1-byte to 4-bytes
+pub fn movsbl(reg1: reg::Operand<reg::RegB>, reg2: reg::RegL) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movs,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Sign extend for 1-byte to 8-bytes
+pub fn movsbq(reg1: reg::Operand<reg::RegB>, reg2: reg::RegQ) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movs,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Sign extend for 2-byte to 4-bytes
+pub fn movswl(reg1: reg::Operand<reg::RegW>, reg2: reg::RegL) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movs,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Sign extend for 2-byte to 8-bytes
+pub fn movswq(reg1: reg::Operand<reg::RegW>, reg2: reg::RegQ) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movs,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Sign extend for 4-byte to 8-bytes
+pub fn movslq(reg1: reg::Operand<reg::RegL>, reg2: reg::RegQ) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movs,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Extension with zeros for 1-byte to 2-bytes
+pub fn movzbw(reg1: reg::Operand<reg::RegB>, reg2: reg::RegW) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movz,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Extension with zeros for 1-byte to 4-bytes
+pub fn movzbl(reg1: reg::Operand<reg::RegB>, reg2: reg::RegL) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movz,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Extension with zeros for 1-byte to 8-bytes
+pub fn movzbq(reg1: reg::Operand<reg::RegB>, reg2: reg::RegQ) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movz,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Extension with zeros for 2-byte to 4-bytes
+pub fn movzwl(reg1: reg::Operand<reg::RegW>, reg2: reg::RegL) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movz,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
+/// Extension with zeros for 2-byte to 8-bytes
+pub fn movzwq(reg1: reg::Operand<reg::RegW>, reg2: reg::RegQ) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Movz,
+        reg1,
+        reg!(reg2),
+    )))
+}
+
 // Move between different sizes not implemented
 
 // movabsq not implemented

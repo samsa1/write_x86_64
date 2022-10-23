@@ -84,6 +84,49 @@ impl<T: Reg> Instr for InstrOpOp<T> {
     }
 }
 
+/// Instruction with operands of different sizes
+pub enum OpOpDifInstrName {
+    /// Sign extend move
+    Movs,
+    /// Fill with zeros move
+    Movz,
+}
+
+impl OpOpDifInstrName {
+    fn to_str(&self) -> &'static str {
+        match self {
+            Self::Movs => "movs",
+            Self::Movz => "movz",
+        }
+    }
+}
+
+/// Instruction using 2 operands of different sizes
+pub struct InstrOpOpDif<T: Reg, R: Reg> {
+    instr: OpOpDifInstrName,
+    reg1: Operand<T>,
+    reg2: Operand<R>,
+}
+
+impl<T: Reg, R: Reg> InstrOpOpDif<T, R> {
+    #[doc(hidden)]
+    pub fn new(instr: OpOpDifInstrName, reg1: Operand<T>, reg2: Operand<R>) -> Self {
+        Self { instr, reg1, reg2 }
+    }
+}
+
+impl<T: Reg, R: Reg> Instr for InstrOpOpDif<T, R> {
+    fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
+        file.write_all(b"\t")?;
+        file.write_all(self.instr.to_str().as_bytes())?;
+        file.write_all(&[T::SIZE.to_char() as u8, R::SIZE.to_char() as u8, ' ' as u8])?;
+        self.reg1.write_in(file)?;
+        file.write_all(b", ")?;
+        self.reg2.write_in(file)?;
+        file.write_all(b"\n")
+    }
+}
+
 /// Instruction with only one argument
 pub enum OpInstrName {
     /// Increment value
