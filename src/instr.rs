@@ -132,10 +132,10 @@ impl<T: Reg, R: Reg> Instr for InstrOpOpDif<T, R> {
     fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
         file.write_all(b"\t")?;
         file.write_all(self.instr.to_str().as_bytes())?;
-        file.write_all(&[T::SIZE.to_char() as u8])?;
         if self.instr.write_all_ext() {
-            file.write_all(&[R::SIZE.to_char() as u8])?;
+            file.write_all(&[T::SIZE.to_char() as u8])?;
         }
+        file.write_all(&[R::SIZE.to_char() as u8])?;
         file.write_all(b" ")?;
         self.reg1.write_in(file)?;
         file.write_all(b", ")?;
