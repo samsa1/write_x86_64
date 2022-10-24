@@ -421,6 +421,78 @@ build_instr_op_op!(Shl, shlb, shlw, shll, shlq);
 build_instr_op_op!(Shr, shrb, shrw, shrl, shrq);
 build_instr_op_op!(Sar, sarb, sarw, sarl, sarq);
 
+/// logical shift of register by value in CL
+pub fn shlb_reg(reg1: reg::Operand<reg::RegB>) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Shl,
+        reg1,
+        reg!(CL),
+    )))
+}
+
+/// logical shift of register by value in CL
+pub fn shlw_reg(reg1: reg::Operand<reg::RegW>) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Shl,
+        reg1,
+        reg!(CL),
+    )))
+}
+
+/// logical shift of register by value in CL
+pub fn shll_reg(reg1: reg::Operand<reg::RegL>) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Shl,
+        reg1,
+        reg!(CL),
+    )))
+}
+
+/// logical shift of register by value in CL
+pub fn shlq_reg(reg1: reg::Operand<reg::RegQ>) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Shl,
+        reg1,
+        reg!(CL),
+    )))
+}
+
+/// logical shift of register by value in CL
+pub fn shrb_reg(reg1: reg::Operand<reg::RegB>) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Shr,
+        reg1,
+        reg!(CL),
+    )))
+}
+
+/// logical shift of register by value in CL
+pub fn shrw_reg(reg1: reg::Operand<reg::RegW>) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Shr,
+        reg1,
+        reg!(CL),
+    )))
+}
+
+/// logical shift of register by value in CL
+pub fn shrl_reg(reg1: reg::Operand<reg::RegL>) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Shr,
+        reg1,
+        reg!(CL),
+    )))
+}
+
+/// logical shift of register by value in CL
+pub fn shrq_reg(reg1: reg::Operand<reg::RegQ>) -> Text {
+    Text::Instr(Box::new(instr::InstrOpOpDif::new(
+        instr::OpOpDifInstrName::Shr,
+        reg1,
+        reg!(CL),
+    )))
+}
+
 //// Jumps
 
 // Function calls and return

@@ -90,6 +90,10 @@ pub enum OpOpDifInstrName {
     Movs,
     /// Fill with zeros move
     Movz,
+    /// Logical shift left
+    Shl,
+    /// Logical shift right
+    Shr,
 }
 
 impl OpOpDifInstrName {
@@ -97,6 +101,15 @@ impl OpOpDifInstrName {
         match self {
             Self::Movs => "movs",
             Self::Movz => "movz",
+            Self::Shl => "shl",
+            Self::Shr => "shr",
+        }
+    }
+
+    fn write_all_ext(&self) -> bool {
+        match self {
+            Self::Movs | Self::Movz => true,
+            _ => false,
         }
     }
 }
@@ -119,7 +132,11 @@ impl<T: Reg, R: Reg> Instr for InstrOpOpDif<T, R> {
     fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
         file.write_all(b"\t")?;
         file.write_all(self.instr.to_str().as_bytes())?;
-        file.write_all(&[T::SIZE.to_char() as u8, R::SIZE.to_char() as u8, ' ' as u8])?;
+        file.write_all(&[T::SIZE.to_char() as u8])?;
+        if self.instr.write_all_ext() {
+            file.write_all(&[R::SIZE.to_char() as u8])?;
+        }
+        file.write_all(b" ")?;
         self.reg1.write_in(file)?;
         file.write_all(b", ")?;
         self.reg2.write_in(file)?;
