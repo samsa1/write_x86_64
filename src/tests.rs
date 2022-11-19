@@ -6,7 +6,7 @@ use std::process::Command;
 fn hello_world() {
     let file_name = "asm_file.s";
 
-    let text_ss = label(new_label("main"))
+    let text_ss = Segment::label(new_label("main"))
         + pushq(reg!(RBP))
         + leaq(lab!(new_label("my_string")), RDI)
         + call(reg::Label::printf())
@@ -16,8 +16,10 @@ fn hello_world() {
         + popq(RBP)
         + ret();
 
-    let data_ss = data::dstring("my_string".to_string(), "Hello".to_string())
-        + data::dstring("my_string2".to_string(), " World\n".to_string());
+    let data_ss = data::label(new_label("my_string"))
+        + data::dstring("Hello".to_string())
+        + data::label(new_label("my_string2"))
+        + data::dstring(" World\\n".to_string());
 
     let file = file::File {
         globl: Some(new_label("main")),
@@ -26,6 +28,11 @@ fn hello_world() {
     };
 
     file.print_in(file_name).unwrap();
+
+    let contents =
+        std::fs::read_to_string(file_name).expect("Should have been able to read the file");
+
+    println!("With text:\n{contents}");
 
     Command::new("gcc")
         .arg(file_name)
@@ -45,15 +52,21 @@ fn hello_world() {
 #[cfg(target_os = "linux")]
 fn hello_world() {
     let file_name = "asm_file.s";
-    let text_ss = label(new_label("main"))
+
+    let text_ss = Segment::label(new_label("main"))
         + pushq(reg!(RBP))
-        + movq(lab!(new_label("my_string")), RDI)
+        + leaq(lab!(new_label("my_string")), RDI)
+        + call(reg::Label::printf())
+        + leaq(lab!(new_label("my_string2")), RDI)
         + call(reg::Label::printf())
         + xorq(reg!(RAX), reg!(RAX))
         + popq(RBP)
         + ret();
 
-    let data_ss = data::dstring("my_string".to_string(), "Hello World\n".to_string());
+    let data_ss = data::label(new_label("my_string"))
+        + data::dstring("Hello".to_string())
+        + data::label(new_label("my_string2"))
+        + data::dstring(" World\\n".to_string());
 
     let file = file::File {
         global: Some(new_label("main")),

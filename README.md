@@ -15,10 +15,7 @@ use write_x86_64::*;
 
 fn main() {
 
-    let globl = label(new_label("main"))
-
-    let text_ss = 
-        label(new_label("main"))
+    let text_ss = Segment::label(new_label("main"))
         + pushq(reg!(RBP))
         + leaq(lab!(new_label("my_string")), RDI)
         + call(reg::Label::printf())
@@ -28,19 +25,16 @@ fn main() {
         + popq(RBP)
         + ret();
 
-    let data_ss = 
-        data::dstring("my_string".to_string(),
-            "Hello".to_string())
-        + data::dstring("my_string2".to_string(),
-            " World\n".to_string());
+    let data_ss = data::label(new_label("my_string")) + data::dstring("Hello".to_string())
+        + data::label(new_label("my_string2")) + data::dstring(" World\\n".to_string());
 
     let file = file::File {
-        globl,
+        globl: Some(new_label("main")),
         text_ss,
         data_ss,
     };
-    
-    file.print_in("asm_file.s").unwrap();
+
+    file.print_in(file_name).unwrap();
 }
 ```
 

@@ -1,3 +1,4 @@
+use crate::traits::Reg;
 use std::io::prelude::*;
 
 /// Different operand sizes
@@ -11,6 +12,8 @@ pub enum Sizes {
     Long,
     /// 8 bytes
     Quad,
+    /// Invalid size
+    Invalid,
 }
 
 impl Sizes {
@@ -21,17 +24,9 @@ impl Sizes {
             Self::Word => 'w',
             Self::Long => 'l',
             Self::Quad => 'q',
+            Self::Invalid => panic!("Internal error"),
         }
     }
-}
-
-/// Trait representing registers (used by Operand<R>)
-pub trait Reg {
-    /// Write register in file
-    fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()>;
-
-    /// Register size
-    const SIZE: Sizes;
 }
 
 #[allow(missing_docs)]
@@ -361,5 +356,17 @@ impl Label {
     /// Write label in file (implementation differs on linux and mac)
     pub fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
         file.write_all(self.name.as_bytes())
+    }
+}
+
+/// Type representing a register that can never occur
+/// It is used internally to type instruction taking only a few operands
+pub enum RegInv {}
+
+impl Reg for RegInv {
+    const SIZE: Sizes = Sizes::Invalid;
+
+    fn write_in(&self, _: &mut std::fs::File) -> std::io::Result<()> {
+        panic!("Internal error")
     }
 }

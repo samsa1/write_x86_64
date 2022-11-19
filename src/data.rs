@@ -3,100 +3,104 @@ use std::io::prelude::*;
 use std::ops::Add;
 
 /// Data that can be stored in the data segments
-pub enum DataEL {
+pub enum DataELInner {
     /// 1-byte value
-    Byte(Vec<i8>),
+    Byte(i8),
     /// 2-byte value
-    Word(Vec<i16>),
+    Word(i16),
     /// 4-byte value
-    Long(Vec<i32>),
+    Long(i32),
     /// 8-byte value
-    Quad(Vec<i64>),
+    Quad(i64),
     /// writes n zeros
     Space(usize),
     /// Stores addresses
-    Address(Vec<super::reg::Label>),
+    Address(super::reg::Label),
     /// Stores string (finished by 0)
     String(String),
+
+    /// Label
+    Label(super::reg::Label),
 }
 
-impl DataEL {
+impl DataELInner {
     fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
         match self {
-            Self::Byte(vec) => {
-                file.write_all(b"\t.byte")?;
-                let mut vec = vec.iter();
-                match vec.next() {
-                    None => (),
-                    Some(el) => file.write_all(format!(" {}", el).as_bytes())?,
-                }
-                for el in vec {
-                    file.write_all(format!(", {}", el).as_bytes())?;
-                }
-                file.write_all(b"\n")
+            Self::Byte(el) => {
+                file.write_all(b"\t.byte ")?;
+                file.write_all(format!("{}", el).as_bytes())
             }
-            Self::Word(vec) => {
+            Self::Word(el) => {
                 file.write_all(b"\t.word")?;
-                let mut vec = vec.iter();
-                match vec.next() {
-                    None => (),
-                    Some(el) => file.write_all(format!(" {}", el).as_bytes())?,
-                }
-                for el in vec {
-                    file.write_all(format!(", {}", el).as_bytes())?;
-                }
-                file.write_all(b"\n")
+                file.write_all(format!("{}", el).as_bytes())
             }
-            Self::Long(vec) => {
+            Self::Long(el) => {
                 file.write_all(b"\t.long")?;
-                let mut vec = vec.iter();
-                match vec.next() {
-                    None => (),
-                    Some(el) => file.write_all(format!(" {}", el).as_bytes())?,
-                }
-                for el in vec {
-                    file.write_all(format!(", {}", el).as_bytes())?;
-                }
-                file.write_all(b"\n")
+                file.write_all(format!("{}", el).as_bytes())
             }
-            Self::Quad(vec) => {
+            Self::Quad(el) => {
                 file.write_all(b"\t.quad")?;
-                let mut vec = vec.iter();
-                match vec.next() {
-                    None => (),
-                    Some(el) => file.write_all(format!(" {}", el).as_bytes())?,
-                }
-                for el in vec {
-                    file.write_all(format!(", {}", el).as_bytes())?;
-                }
-                file.write_all(b"\n")
+                file.write_all(format!("{}", el).as_bytes())
             }
-            Self::Address(vec) => {
+            Self::Address(el) => {
                 file.write_all(b"\t.quad ")?;
-                let mut vec = vec.iter();
-                match vec.next() {
-                    None => (),
-                    Some(el) => el.write_in(file)?,
-                }
-                for el in vec {
-                    file.write_all(b", ")?;
-                    el.write_in(file)?;
-                }
-                file.write_all(b"\n")
+                el.write_in(file)
             }
             Self::String(str) => {
                 file.write_all(b"\t.string \"")?;
                 file.write_all(str.as_bytes())?;
-                file.write_all(b"\"\n")
+                file.write_all(b"\"")
             }
-            Self::Space(i) => file.write_all(format!("\t.space {}\n", i).as_bytes()),
+            Self::Space(i) => file.write_all(format!("\t.space {}", i).as_bytes()),
+            Self::Label(el) => {
+                el.write_in(file)?;
+                file.write_all(b":")
+            }
+        }
+    }
+
+    fn to_data_el(self) -> DataEL {
+        DataEL {
+            info: self,
+            comment: None,
+        }
+    }
+}
+
+/// Structure representing a single element of the data segment
+pub struct DataEL {
+    info: DataELInner,
+    comment: Option<String>,
+}
+
+impl DataEL {
+    fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
+        self.info.write_in(file)?;
+        match &self.comment {
+            None => (),
+            Some(str) => {
+                file.write_all(b" ##")?;
+                file.write_all(str.as_bytes())?;
+            }
+        }
+        file.write_all(b"\n")
+    }
+
+    /// Add a comment at the end of the corresponding line
+    pub fn add_comment(&mut self, comment: String) {
+        match &mut self.comment {
+            None => self.comment = Some(comment),
+            Some(str) => {
+                str.push_str(" ## ");
+                str.push_str(&comment);
+            }
         }
     }
 }
 
 /// Structure representing the data segment
 pub struct Data {
-    infos: Vec<(Option<String>, DataEL)>,
+    infos: Vec<DataEL>,
 }
 
 impl Data {
@@ -107,52 +111,30 @@ impl Data {
 
     /// Create new chunck of data segment with optionally a label
     /// and values to put with it
-    pub fn new(name: Option<String>, data: DataEL) -> Self {
-        Self {
-            infos: vec![(name, data)],
-        }
+    pub fn new(data: DataEL) -> Self {
+        Self { infos: vec![data] }
     }
 
     #[doc(hidden)]
     pub fn from_strings(strings: HashMap<String, String>) -> Self {
+        let info: Vec<Vec<_>> = strings
+            .into_iter()
+            .map(|(s1, s2)| {
+                (vec![
+                    DataELInner::Label(super::reg::Label::from_str(s2)).to_data_el(),
+                    DataELInner::String(s1).to_data_el(),
+                ])
+            })
+            .collect();
         Self {
-            infos: strings
-                .into_iter()
-                .map(|(s1, s2)| (Some(s2), DataEL::String(s1)))
-                .collect(),
+            infos: info.into_iter().flatten().collect(),
         }
     }
 
-    #[cfg(target_os = "linux")]
     /// Write data segment in file
     /// Does not add the .data at the beginning!
     pub fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
-        for (name, data) in &self.infos {
-            match name {
-                None => (),
-                Some(name) => {
-                    file.write_all(name.as_bytes())?;
-                    file.write_all(b":\n")?;
-                }
-            }
-            data.write_in(file)?;
-        }
-        Ok(())
-    }
-
-    #[cfg(target_os = "macos")]
-    /// Write data segment in file
-    /// Does not add the .data at the beginning!
-    pub fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
-        for (name, data) in &self.infos {
-            match name {
-                None => (),
-                Some(name) => {
-                    file.write_all(b"_")?;
-                    file.write_all(name.as_bytes())?;
-                    file.write_all(b":\n")?;
-                }
-            }
+        for data in &self.infos {
             data.write_in(file)?;
         }
         Ok(())
@@ -169,37 +151,42 @@ impl Add for Data {
     }
 }
 
+/// Add a label in data area
+pub fn label(name: crate::reg::Label) -> Data {
+    Data::new(DataELInner::Label(name).to_data_el())
+}
+
 /// Place a constant string (end with 0) in data area
-pub fn dstring(name: String, data: String) -> Data {
-    Data::new(Some(name), DataEL::String(data))
+pub fn dstring(data: String) -> Data {
+    Data::new(DataELInner::String(data).to_data_el())
 }
 
 /// Place a list 1 bytes values in data area
-pub fn dbyte(name: String, i: Vec<i8>) -> Data {
-    Data::new(Some(name), DataEL::Byte(i))
+pub fn dbyte(i: i8) -> Data {
+    Data::new(DataELInner::Byte(i).to_data_el())
 }
 
 /// Place a list 2 bytes values in data area
-pub fn dword(name: String, i: Vec<i16>) -> Data {
-    Data::new(Some(name), DataEL::Word(i))
+pub fn dword(i: i16) -> Data {
+    Data::new(DataELInner::Word(i).to_data_el())
 }
 
 /// Place a list 4 bytes values in data area
-pub fn dlong(name: String, i: Vec<i32>) -> Data {
-    Data::new(Some(name), DataEL::Long(i))
+pub fn dlong(i: i32) -> Data {
+    Data::new(DataELInner::Long(i).to_data_el())
 }
 
 /// Place a list 8 bytes values in data area
-pub fn dquad(name: String, i: Vec<i64>) -> Data {
-    Data::new(Some(name), DataEL::Quad(i))
+pub fn dquad(i: i64) -> Data {
+    Data::new(DataELInner::Quad(i).to_data_el())
 }
 
 /// Place a list of addresses in the data area
-pub fn daddress(name: String, addr: Vec<super::reg::Label>) -> Data {
-    Data::new(Some(name), DataEL::Address(addr))
+pub fn daddress(addr: super::reg::Label) -> Data {
+    Data::new(DataELInner::Address(addr).to_data_el())
 }
 
 /// Allocate n bytes (valued to 0) in the data segment
 pub fn space(i: usize) -> Data {
-    Data::new(None, DataEL::Space(i))
+    Data::new(DataELInner::Space(i).to_data_el())
 }

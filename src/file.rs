@@ -1,4 +1,5 @@
 use super::Text;
+use crate::traits::Writable;
 use std::fs;
 use std::io::prelude::*;
 
