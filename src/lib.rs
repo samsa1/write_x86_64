@@ -141,6 +141,13 @@ impl<T> Segment<T> {
     pub fn name(self, name: String) -> NamedSegment<T> {
         NamedSegment::new(name, self)
     }
+
+    /// Create an empty segment
+    pub fn empty() -> Self {
+        Self {
+            data:  Vec::new()
+        }
+    }
 }
 
 impl<T> Add for Segment<T> {
