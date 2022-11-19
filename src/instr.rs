@@ -265,8 +265,8 @@ impl InstrName {
             | InstrName::Test
             | InstrName::Lea
             | InstrName::IMul => false,
-            InstrName::Movs | InstrName::Movz => false,
-            InstrName::ShlC | InstrName::ShrC => true,
+            InstrName::Movs | InstrName::Movz => true,
+            InstrName::ShlC | InstrName::ShrC => false,
             InstrName::Inc
             | InstrName::Dec
             | InstrName::Neg
