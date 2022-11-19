@@ -31,15 +31,15 @@ impl DataELInner {
                 file.write_all(format!("{}", el).as_bytes())
             }
             Self::Word(el) => {
-                file.write_all(b"\t.word")?;
+                file.write_all(b"\t.word ")?;
                 file.write_all(format!("{}", el).as_bytes())
             }
             Self::Long(el) => {
-                file.write_all(b"\t.long")?;
+                file.write_all(b"\t.long ")?;
                 file.write_all(format!("{}", el).as_bytes())
             }
             Self::Quad(el) => {
-                file.write_all(b"\t.quad")?;
+                file.write_all(b"\t.quad ")?;
                 file.write_all(format!("{}", el).as_bytes())
             }
             Self::Address(el) => {
