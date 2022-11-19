@@ -120,10 +120,10 @@ impl Data {
         let info: Vec<Vec<_>> = strings
             .into_iter()
             .map(|(s1, s2)| {
-                (vec![
+                vec![
                     DataELInner::Label(super::reg::Label::from_str(s2)).to_data_el(),
                     DataELInner::String(s1).to_data_el(),
-                ])
+                ]
             })
             .collect();
         Self {

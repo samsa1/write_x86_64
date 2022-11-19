@@ -174,7 +174,8 @@ impl<T> NamedSegment<T> {
     }
 }
 
-type Text = Segment<instr::Instr>;
+/// Type alias representing the data Segment
+pub type Text = Segment<instr::Instr>;
 
 /// nop instruction (does nothing)
 pub fn nop() -> Text {
