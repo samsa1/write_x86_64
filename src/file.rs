@@ -1,4 +1,4 @@
-use super::Text;
+use super::{Data, Text};
 use crate::traits::Writable;
 use std::fs;
 use std::io::prelude::*;
@@ -12,7 +12,7 @@ pub struct File {
     pub text_ss: Text,
 
     /// Data segment
-    pub data_ss: super::data::Data,
+    pub data_ss: Data,
 }
 
 impl File {

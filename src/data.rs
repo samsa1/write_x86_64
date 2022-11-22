@@ -1,105 +1,131 @@
-use std::collections::HashMap;
+use crate::traits::Writable;
+use crate::Data;
 use std::io::prelude::*;
-use std::ops::Add;
 
 /// Data that can be stored in the data segments
-pub enum DataELInner {
+pub enum DataEL {
     /// 1-byte value
     Byte(i8),
+    /// 1-byte usingned value
+    ByteU(u8),
     /// 2-byte value
     Word(i16),
+    /// 2-byte usingned value
+    ShortU(u16),
     /// 4-byte value
     Long(i32),
+    /// 4-byte value
+    LongU(u32),
     /// 8-byte value
     Quad(i64),
     /// writes n zeros
     Space(usize),
-    /// Stores addresses
-    Address(super::reg::Label),
-    /// Stores string (finished by 0)
-    String(String),
-
-    /// Label
-    Label(super::reg::Label),
+    /// Stores addresses 4 bytes
+    AddressLong(super::reg::Label),
+    /// Stores addresses 8 bytes
+    AddressQuad(super::reg::Label),
+    /// Stores string not terminated by zero
+    Ascii(String),
+    /// Asciz 0 terminated string
+    Asciz(String),
 }
 
-impl DataELInner {
+impl Writable for DataEL {
     fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
         match self {
             Self::Byte(el) => {
-                file.write_all(b"\t.byte ")?;
-                file.write_all(format!("{}", el).as_bytes())
+                file.write_all(b"\t.byte  ")?;
+                file.write_all(format!("{:<10}", el).as_bytes())
+            }
+            Self::ByteU(el) => {
+                file.write_all(b"\t.byte  ")?;
+                file.write_all(format!("{:<10}", el).as_bytes())
             }
             Self::Word(el) => {
-                file.write_all(b"\t.word ")?;
-                file.write_all(format!("{}", el).as_bytes())
+                file.write_all(b"\t.word  ")?;
+                file.write_all(format!("{:<10}", el).as_bytes())
+            }
+            Self::ShortU(el) => {
+                file.write_all(b"\t.short ")?;
+                file.write_all(format!("{:<10}", el).as_bytes())
             }
             Self::Long(el) => {
-                file.write_all(b"\t.long ")?;
-                file.write_all(format!("{}", el).as_bytes())
+                file.write_all(b"\t.long  ")?;
+                file.write_all(format!("{:<10}", el).as_bytes())
+            }
+            Self::LongU(el) => {
+                file.write_all(b"\t.long  ")?;
+                file.write_all(format!("{:<10}", el).as_bytes())
             }
             Self::Quad(el) => {
-                file.write_all(b"\t.quad ")?;
-                file.write_all(format!("{}", el).as_bytes())
+                file.write_all(b"\t.quad  ")?;
+                file.write_all(format!("{:<10}", el).as_bytes())
             }
-            Self::Address(el) => {
-                file.write_all(b"\t.quad ")?;
+            Self::AddressLong(el) => {
+                file.write_all(b"\t.long  ")?;
                 el.write_in(file)
             }
-            Self::String(str) => {
-                file.write_all(b"\t.string \"")?;
+            Self::AddressQuad(el) => {
+                file.write_all(b"\t.quad  ")?;
+                el.write_in(file)
+            }
+            Self::Ascii(str) => {
+                file.write_all(b"\t.ascii \"")?;
+                file.write_all(str.as_bytes())?;
+                file.write_all(b"\"")
+            }
+            Self::Asciz(str) => {
+                file.write_all(b"\t.asciz \"")?;
                 file.write_all(str.as_bytes())?;
                 file.write_all(b"\"")
             }
             Self::Space(i) => file.write_all(format!("\t.space {}", i).as_bytes()),
-            Self::Label(el) => {
-                el.write_in(file)?;
-                file.write_all(b":")
-            }
         }
     }
 
-    fn to_data_el(self) -> DataEL {
-        DataEL {
-            info: self,
-            comment: None,
-        }
-    }
+    // fn to_data_el(self) -> DataEL {
+    //     DataEL {
+    //         info: self,
+    //         comment: None,
+    //     }
+    // }
 }
 
 /// Structure representing a single element of the data segment
-pub struct DataEL {
-    info: DataELInner,
-    comment: Option<String>,
-}
+// pub struct DataEL {
+//     info: DataELInner,
+//     comment: Option<String>,
+// }
 
-impl DataEL {
-    fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
-        self.info.write_in(file)?;
-        match &self.comment {
-            None => (),
-            Some(str) => {
-                file.write_all(b" ##")?;
-                file.write_all(str.as_bytes())?;
-            }
-        }
-        file.write_all(b"\n")
-    }
+// impl DataEL {
+//     /// Add a comment at the end of the corresponding line
+//     pub fn add_comment(&mut self, comment: String) {
+//         match &mut self.comment {
+//             None => self.comment = Some(comment),
+//             Some(str) => {
+//                 str.push_str(" ## ");
+//                 str.push_str(&comment);
+//             }
+//         }
+//     }
+// }
 
-    /// Add a comment at the end of the corresponding line
-    pub fn add_comment(&mut self, comment: String) {
-        match &mut self.comment {
-            None => self.comment = Some(comment),
-            Some(str) => {
-                str.push_str(" ## ");
-                str.push_str(&comment);
-            }
-        }
-    }
-}
+// impl Writable for DataEL {
+//     fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
+//         self.info.write_in(file)?;
+//         match &self.comment {
+//             None => (),
+//             Some(str) => {
+//                 file.write_all(b" ##")?;
+//                 file.write_all(str.as_bytes())?;
+//             }
+//         }
+//         file.write_all(b"\n")
+//     }
+// }
 
 /// Structure representing the data segment
-pub struct Data {
+/*pub struct Data {
     infos: Vec<DataEL>,
 }
 
@@ -122,7 +148,7 @@ impl Data {
             .map(|(s1, s2)| {
                 vec![
                     DataELInner::Label(super::reg::Label::from_str(s2)).to_data_el(),
-                    DataELInner::String(s1).to_data_el(),
+                    DataELInner::Asciz(s1).to_data_el(),
                 ]
             })
             .collect();
@@ -139,54 +165,82 @@ impl Data {
         }
         Ok(())
     }
-}
 
-impl Add for Data {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
-        let mut infos = self.infos;
-        let mut infos2 = other.infos;
-        infos.append(&mut infos2);
-        Self { infos }
+    /// Add a comment to last element on the data segment
+    pub fn comment(mut self, str : String) -> Self {
+        if self.infos.is_empty() {
+            panic!("Cannot comment empty segment")
+        } else {
+            self.infos.last_mut().unwrap().add_comment(str);
+            self
+        }
+    }
+
+    /// Add a comment to last element on the data segment
+    pub fn add_comment(&mut self, str : String) {
+        if self.infos.is_empty() {
+            panic!("Cannot comment empty segment")
+        } else {
+            self.infos.last_mut().unwrap().add_comment(str);
+        }
     }
 }
-
-/// Add a label in data area
-pub fn label(name: crate::reg::Label) -> Data {
-    Data::new(DataELInner::Label(name).to_data_el())
-}
+*/
 
 /// Place a constant string (end with 0) in data area
-pub fn dstring(data: String) -> Data {
-    Data::new(DataELInner::String(data).to_data_el())
+pub fn dasciz(data: String) -> Data {
+    Data::new(DataEL::Asciz(data))
+}
+/// Place a constant string (does not end with 0) in data area
+pub fn dascii(data: String) -> Data {
+    Data::new(DataEL::Ascii(data))
 }
 
-/// Place a list 1 bytes values in data area
+/// Place a 1 byte value in data area
 pub fn dbyte(i: i8) -> Data {
-    Data::new(DataELInner::Byte(i).to_data_el())
+    Data::new(DataEL::Byte(i))
+}
+/// Place an unsigned 1 byte value in data area
+pub fn dubyte(i: u8) -> Data {
+    Data::new(DataEL::ByteU(i))
 }
 
-/// Place a list 2 bytes values in data area
+/// Place a 2 bytes value in data area
 pub fn dword(i: i16) -> Data {
-    Data::new(DataELInner::Word(i).to_data_el())
+    Data::new(DataEL::Word(i))
 }
 
-/// Place a list 4 bytes values in data area
+/// Place an unsigned 2 bytes value in data area
+pub fn dushort(i: u16) -> Data {
+    Data::new(DataEL::ShortU(i))
+}
+
+/// Place a 4 bytes value in data area
 pub fn dlong(i: i32) -> Data {
-    Data::new(DataELInner::Long(i).to_data_el())
+    Data::new(DataEL::Long(i))
 }
 
-/// Place a list 8 bytes values in data area
+/// Place an unsigned 4 bytes value in data area
+pub fn dulong(i: u32) -> Data {
+    Data::new(DataEL::LongU(i))
+}
+
+/// Place a 8 bytes value in data area
 pub fn dquad(i: i64) -> Data {
-    Data::new(DataELInner::Quad(i).to_data_el())
+    Data::new(DataEL::Quad(i))
 }
 
-/// Place a list of addresses in the data area
+/// Place of addresse in the data area
 pub fn daddress(addr: super::reg::Label) -> Data {
-    Data::new(DataELInner::Address(addr).to_data_el())
+    Data::new(DataEL::AddressQuad(addr))
+}
+
+/// Place of addresse in the data area
+pub fn dlong_label(addr: super::reg::Label) -> Data {
+    Data::new(DataEL::AddressLong(addr))
 }
 
 /// Allocate n bytes (valued to 0) in the data segment
 pub fn space(i: usize) -> Data {
-    Data::new(DataELInner::Space(i).to_data_el())
+    Data::new(DataEL::Space(i))
 }

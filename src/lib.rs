@@ -54,6 +54,9 @@ pub mod traits;
 /// Defines debug symbols
 pub mod debug;
 
+/// Defines directives
+pub mod directives;
+
 #[macro_use]
 mod macros;
 
@@ -61,7 +64,7 @@ mod macros;
 mod tests;
 
 use std::io::prelude::*;
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 // Segments
 
@@ -78,6 +81,9 @@ pub enum SegmentEL<T> {
 
     /// Element
     Data(T),
+
+    /// Directives
+    Directive(directives::Directive),
 }
 
 impl<T: traits::Writable> traits::Writable for SegmentEL<T> {
@@ -85,55 +91,112 @@ impl<T: traits::Writable> traits::Writable for SegmentEL<T> {
         match self {
             Self::Label(lab) => {
                 lab.write_in(file)?;
-                file.write_all(b":")?;
+                file.write_all(b":")
             }
-            Self::Inline(str) => {
-                file.write_all(str.as_bytes())?;
-            }
+            Self::Inline(str) => file.write_all(str.as_bytes()),
             Self::Comment(str) => {
                 file.write_all(b"## ")?;
-                file.write_all(str.as_bytes())?;
+                file.write_all(str.as_bytes())
             }
             Self::Data(el) => {
                 file.write_all(b"\t")?;
-                el.write_in(file)?;
+                el.write_in(file)
+            }
+            Self::Directive(d) => {
+                file.write_all(b"\t")?;
+                d.write_in(file)
             }
         }
+    }
+}
+
+impl<T> SegmentEL<T> {
+    /// Toward a wrapper for potential comment to the segment element
+    pub fn wrapped(self) -> SegmentELWrapper<T> {
+        SegmentELWrapper {
+            el: self,
+            comment: None,
+        }
+    }
+}
+
+/// Wrapper around a segment element to store a potential comment
+pub struct SegmentELWrapper<T> {
+    el: SegmentEL<T>,
+    comment: Option<String>,
+}
+
+impl<T> SegmentELWrapper<T> {
+    /// Add a comment to segment element
+    pub fn comment(&mut self, str: String) {
+        match &mut self.comment {
+            None => self.comment = Some(str),
+            Some(c) => {
+                c.push_str(" ## ");
+                c.push_str(&str);
+            }
+        }
+    }
+}
+
+impl<T: traits::Writable> traits::Writable for SegmentELWrapper<T> {
+    fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
+        self.el.write_in(file)?;
+        if let Some(str) = &self.comment {
+            file.write_all(b" ## ")?;
+            file.write_all(str.as_bytes())?;
+        };
         file.write_all(b"\n")
     }
 }
 
 /// Segment
 pub struct Segment<T> {
-    data: Vec<SegmentEL<T>>,
+    data: Vec<SegmentELWrapper<T>>,
 }
 
 impl<T> Segment<T> {
     /// Create a segment with only an element
     fn new(el: T) -> Self {
         Self {
-            data: vec![SegmentEL::Data(el)],
+            data: vec![SegmentEL::Data(el).wrapped()],
         }
     }
 
     /// Create a segment with only a label
     pub fn label(lab: reg::Label) -> Self {
         Self {
-            data: vec![SegmentEL::Label(lab)],
+            data: vec![SegmentEL::Label(lab).wrapped()],
         }
     }
 
     /// Create a segment with only something inlined
     pub fn inline(str: String) -> Self {
         Self {
-            data: vec![SegmentEL::Inline(str)],
+            data: vec![SegmentEL::Inline(str).wrapped()],
         }
     }
 
     /// Create a segment with only a comment
     pub fn comment(str: String) -> Self {
         Self {
-            data: vec![SegmentEL::Inline(str)],
+            data: vec![SegmentEL::Comment(str).wrapped()],
+        }
+    }
+
+    /// Create a segment with only a comment
+    pub fn add_comment(mut self, str: String) -> Self {
+        match self.data.last_mut() {
+            None => self.data.push(SegmentEL::Comment(str).wrapped()),
+            Some(el) => el.comment(str),
+        }
+        self
+    }
+
+    /// Add a directive to segment
+    pub fn directive(directive: directives::Directive) -> Self {
+        Self {
+            data: vec![SegmentEL::Directive(directive).wrapped()],
         }
     }
 
@@ -144,9 +207,7 @@ impl<T> Segment<T> {
 
     /// Create an empty segment
     pub fn empty() -> Self {
-        Self {
-            data:  Vec::new()
-        }
+        Self { data: Vec::new() }
     }
 }
 
@@ -156,6 +217,12 @@ impl<T> Add for Segment<T> {
     fn add(mut self, mut other: Self) -> Self {
         self.data.append(&mut other.data);
         self
+    }
+}
+
+impl<T> AddAssign for Segment<T> {
+    fn add_assign(&mut self, mut rhs: Self) {
+        self.data.append(&mut rhs.data)
     }
 }
 
@@ -181,8 +248,20 @@ impl<T> NamedSegment<T> {
     }
 }
 
-/// Type alias representing the data Segment
+impl<T: traits::Writable> traits::Writable for NamedSegment<T> {
+    fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
+        file.write_all(b"\t.section ")?;
+        file.write_all(self.name.as_bytes())?;
+        file.write_all(b"\n")?;
+        self.data.write_in(file)
+    }
+}
+
+/// Type alias representing the text Segment
 pub type Text = Segment<instr::Instr>;
+
+/// Type alias representing the data Segment
+pub type Data = Segment<data::DataEL>;
 
 /// nop instruction (does nothing)
 pub fn nop() -> Text {
@@ -191,15 +270,6 @@ pub fn nop() -> Text {
         reg1: None,
         reg2: None,
     }))
-}
-
-impl<T: traits::Writable> traits::Writable for NamedSegment<T> {
-    fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
-        file.write_all(b"\t.section ")?;
-        file.write_all(self.name.as_bytes())?;
-        file.write_all(b"\n")?;
-        self.data.write_in(file)
-    }
 }
 
 /// Directly inline assembly code

@@ -16,10 +16,10 @@ fn hello_world() {
         + popq(RBP)
         + ret();
 
-    let data_ss = data::label(new_label("my_string"))
-        + data::dstring("Hello".to_string())
-        + data::label(new_label("my_string2"))
-        + data::dstring(" World\\n".to_string());
+    let data_ss = Data::label(new_label("my_string"))
+        + data::dasciz("Hello".to_string())
+        + Data::label(new_label("my_string2"))
+        + data::dasciz(" World\\n".to_string());
 
     let file = file::File {
         globl: Some(new_label("main")),
@@ -63,18 +63,19 @@ fn hello_world() {
         + popq(RBP)
         + ret();
 
-    let data_ss = data::label(new_label("my_string"))
-        + data::dstring("Hello".to_string())
-        + data::label(new_label("my_string2"))
-        + data::dstring(" World\\n".to_string());
+    let data_ss = Data::label(new_label("my_string"))
+        + data::dasciz("Hello".to_string())
+        + Data::label(new_label("my_string2"))
+        + data::dasciz(" World\\n".to_string());
 
     let file = file::File {
-        global: Some(new_label("main")),
+        globl: Some(new_label("main")),
         text_ss,
         data_ss,
     };
 
     file.print_in(file_name).unwrap();
+
     Command::new("gcc")
         .arg(file_name)
         .output()
