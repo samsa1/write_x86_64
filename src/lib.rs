@@ -700,6 +700,15 @@ pub fn leave() -> Text {
     }))
 }
 
+/// Syscall instruction
+pub fn syscall() -> Text {
+    Text::new(Box::new(instr::Instruction::<reg::RegInv, reg::RegInv> {
+        instr: instr::InstrName::Syscall,
+        reg1: None,
+        reg2: None,
+    }))
+}
+
 /// Equivalent to popq %rip
 pub fn ret() -> Text {
     Text::new(Box::new(instr::Instruction::<reg::RegInv, reg::RegInv> {

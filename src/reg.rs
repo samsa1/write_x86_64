@@ -79,6 +79,27 @@ impl Reg for RegQ {
         file.write_all(self.to_str().as_bytes())
     }
 
+    fn to_bits(&self) -> (bool, u8) {
+        match self {
+            RegQ::Rax => (false, 0b000),
+            RegQ::Rbx => (false, 0b011),
+            RegQ::Rcx => (false, 0b001),
+            RegQ::Rdx => (false, 0b010),
+            RegQ::Rsi => (false, 0b110),
+            RegQ::Rdi => (false, 0b111),
+            RegQ::Rbp => (false, 0b101),
+            RegQ::Rsp => (false, 0b100),
+            RegQ::R8 => (true, 0b000),
+            RegQ::R9 => (true, 0b001),
+            RegQ::R10 => (true, 0b010),
+            RegQ::R11 => (true, 0b011),
+            RegQ::R12 => (true, 0b100),
+            RegQ::R13 => (true, 0b101),
+            RegQ::R14 => (true, 0b110),
+            RegQ::R15 => (true, 0b111),
+        }
+    }
+
     const SIZE: Sizes = Sizes::Quad;
 }
 
@@ -132,6 +153,27 @@ impl Reg for RegL {
         file.write_all(self.to_str().as_bytes())
     }
 
+    fn to_bits(&self) -> (bool, u8) {
+        match self {
+            Self::Eax => (false, 0b000),
+            Self::Ebx => (false, 0b011),
+            Self::Ecx => (false, 0b001),
+            Self::Edx => (false, 0b010),
+            Self::Esi => (false, 0b110),
+            Self::Edi => (false, 0b111),
+            Self::Ebp => (false, 0b101),
+            Self::Esp => (false, 0b100),
+            Self::R8d => (true, 0b000),
+            Self::R9d => (true, 0b001),
+            Self::R10d => (true, 0b010),
+            Self::R11d => (true, 0b011),
+            Self::R12d => (true, 0b100),
+            Self::R13d => (true, 0b101),
+            Self::R14d => (true, 0b110),
+            Self::R15d => (true, 0b111),
+        }
+    }
+
     const SIZE: Sizes = Sizes::Long;
 }
 
@@ -183,6 +225,27 @@ impl RegW {
 impl Reg for RegW {
     fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
         file.write_all(self.to_str().as_bytes())
+    }
+
+    fn to_bits(&self) -> (bool, u8) {
+        match self {
+            RegW::Ax => (false, 0b000),
+            RegW::Cx => (false, 0b001),
+            RegW::Dx => (false, 0b010),
+            RegW::Bx => (false, 0b011),
+            RegW::Sp => (false, 0b100),
+            RegW::Bp => (false, 0b101),
+            RegW::Si => (false, 0b110),
+            RegW::Di => (false, 0b101),
+            RegW::R8w => (true, 0b000),
+            RegW::R9w => (true, 0b001),
+            RegW::R10w => (true, 0b010),
+            RegW::R11w => (true, 0b011),
+            RegW::R12w => (true, 0b100),
+            RegW::R13w => (true, 0b101),
+            RegW::R14w => (true, 0b110),
+            RegW::R15w => (true, 0b111),
+        }
     }
 
     const SIZE: Sizes = Sizes::Word;
@@ -246,6 +309,31 @@ impl Reg for RegB {
         file.write_all(self.to_str().as_bytes())
     }
 
+    fn to_bits(&self) -> (bool, u8) {
+        match self {
+            RegB::Al => (false, 0b000),
+            RegB::Cl => (false, 0b001),
+            RegB::Dl => (false, 0b010),
+            RegB::Bl => (false, 0b011),
+            RegB::Ah => todo!(),
+            RegB::Spl => todo!(),
+            RegB::Ch => todo!(),
+            RegB::Bpl => todo!(),
+            RegB::Dh => todo!(),
+            RegB::Sil => todo!(),
+            RegB::Bh => todo!(),
+            RegB::Dil => todo!(),
+            RegB::R8b => (true, 0b000),
+            RegB::R9b => (true, 0b001),
+            RegB::R10b => (true, 0b010),
+            RegB::R11b => (true, 0b011),
+            RegB::R12b => (true, 0b100),
+            RegB::R13b => (true, 0b101),
+            RegB::R14b => (true, 0b110),
+            RegB::R15b => (true, 0b111),
+        }
+    }
+
     const SIZE: Sizes = Sizes::Byte;
 }
 
@@ -268,6 +356,14 @@ pub enum Operand<T: Reg> {
 }
 
 impl<T: Reg> Operand<T> {
+    /// test if operand is register of memory
+    pub fn is_rm(&self) -> bool {
+        match self {
+            Self::Addr(_, _, _, _) | Self::Reg(_) => true,
+            _ => false,
+        }
+    }
+
     /// Write operand in file
     pub fn write_in(&self, file: &mut std::fs::File) -> std::io::Result<()> {
         match self {
@@ -361,6 +457,7 @@ impl Label {
 
 /// Type representing a register that can never occur
 /// It is used internally to type instruction taking only a few operands
+#[derive(Debug, Copy, Clone)]
 pub enum RegInv {}
 
 impl Reg for RegInv {
@@ -368,5 +465,9 @@ impl Reg for RegInv {
 
     fn write_in(&self, _: &mut std::fs::File) -> std::io::Result<()> {
         panic!("Internal error")
+    }
+
+    fn to_bits(&self) -> (bool, u8) {
+        panic!("Should not happen")
     }
 }
